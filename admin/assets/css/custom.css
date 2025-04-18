@@ -1,0 +1,16 @@
+body {
+    font-family: 'Roboto', sans-serif;
+}
+.table th, .table td {
+    vertical-align: middle;
+}
+.card-img-top {
+    max-height: 100px;
+    object-fit: cover;
+}
+@media (max-width: 768px) {
+    .sidebar {
+        position: fixed;
+        z-index: 1000;
+    }
+}
