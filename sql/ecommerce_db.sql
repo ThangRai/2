@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Máy chủ: localhost:3306
--- Thời gian đã tạo: Th4 18, 2025 lúc 02:16 PM
+-- Thời gian đã tạo: Th4 22, 2025 lúc 07:46 AM
 -- Phiên bản máy phục vụ: 8.4.3
 -- Phiên bản PHP: 8.3.16
 
@@ -102,7 +102,15 @@ INSERT INTO `admin_logins` (`id`, `admin_id`, `admin_name`, `ip_address`, `login
 (29, 2, 'Thắng Raiy', '::1', '2025-04-18 08:41:28'),
 (30, 1, 'Thắng Rai', '::1', '2025-04-18 08:42:30'),
 (31, 7, 'Lê Văn Thắng', '::1', '2025-04-18 08:54:30'),
-(32, 1, 'Thắng Rai', '::1', '2025-04-18 11:53:45');
+(32, 1, 'Thắng Rai', '::1', '2025-04-18 11:53:45'),
+(33, 1, 'Thắng Rai', '::1', '2025-04-21 03:48:30'),
+(34, 1, 'Thắng Rai', '::1', '2025-04-21 03:48:42'),
+(35, 1, 'Thắng Rai', '::1', '2025-04-21 03:48:54'),
+(36, 1, 'Thắng Rai', '::1', '2025-04-21 12:26:24'),
+(37, 1, 'Thắng Rai', '::1', '2025-04-22 06:18:59'),
+(38, 8, 'Lê Văn Bá Lợi', '::1', '2025-04-22 06:19:12'),
+(39, 1, 'Thắng Rai', '::1', '2025-04-22 06:19:53'),
+(40, 8, 'Lê Văn Bá Lợi', '::1', '2025-04-22 07:29:48');
 
 -- --------------------------------------------------------
 
@@ -179,7 +187,7 @@ CREATE TABLE `contacts_info` (
 --
 
 INSERT INTO `contacts_info` (`id`, `address`, `phone`, `email`, `working_hours`, `map_iframe`, `updated_at`) VALUES
-(1, '161 Thôn 3, Xã Khuê Ngọc Điền, Huyện Krông Bông, Tỉnh Đắk Lắk, Việt Nam', '0914476792', 'vanthang@webso.vn', 'Thứ Hai - Thứ Sáu: 9:00 - 17:00', '<iframe src=\"https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3894.832426986445!2d108.30534958539566!3d12.527257892891637!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x317193b603af7f3b%3A0x71c85315931a80b0!2zVGjhuq9uZyBSYWk!5e0!3m2!1svi!2s!4v1744961247747!5m2!1svi!2s\" width=\"100%\" height=\"450\" style=\"border:0;\" allowfullscreen=\"\" loading=\"lazy\" referrerpolicy=\"no-referrer-when-downgrade\"></iframe>', '2025-04-18 07:31:03');
+(1, '161 Thôn 3, Xã Khuê Ngọc Điền, Huyện Krông Bông, Tỉnh Đắk Lắk, Việt Nam', '0914476792', 'vanthang@webso.vn', 'Thứ Hai - Thứ Sáu: 9:00 - 17:00', '<iframe src=\"https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3894.832426986445!2d108.30534958539566!3d12.527257892891637!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x317193b603af7f3b%3A0x71c85315931a80b0!2zVGjhuq9uZyBSYWk!5e0!3m2!1svi!2s!4v1744961247747!5m2!1svi!2s\" width=\"100%\" height=\"450\" style=\"border:0;\" allowfullscreen=\"\" loading=\"lazy\" referrerpolicy=\"no-referrer-when-downgrade\"></iframe>', '2025-04-21 08:54:59');
 
 -- --------------------------------------------------------
 
@@ -278,7 +286,8 @@ INSERT INTO `customers` (`id`, `name`, `email`, `phone`, `address`, `province`, 
 (12, 'Lê Văn Thắng', 'zufugitu@mailinator.com', '0914476792', 'thôn 3 số nhà 161', 'Tỉnh Hà Nam', 'Huyện Thanh Liêm', 'Xã Thanh Tâm', '2025-04-18 12:14:01', ''),
 (13, 'Lê Văn Thắng', 'badaotulonsg123@gmail.com', '0914476792', 'thôn 3 số nhà 161', 'Tỉnh Đắk Lắk', 'Huyện Ea Kar', 'Xã Ea Kmút', '2025-04-18 12:25:03', ''),
 (14, 'Lê Văn Thắng', 'vanthang@webso.vn', '0914476792', 'thôn 3 số nhà 161', 'Tỉnh Đắk Lắk', 'Thành phố Buôn Ma Thuột', 'Phường Tân Hòa', '2025-04-18 12:32:59', ''),
-(15, 'Lê Văn Thắng', 'badsaotulong123@gmail.com', '0914476792', 'thôn 3 số nhà 161', 'Tỉnh Đắk Lắk', 'Huyện Krông Pắc', 'Xã Hòa Đông', '2025-04-18 12:50:20', '');
+(15, 'Lê Văn Thắng', 'badsaotulong123@gmail.com', '0914476792', 'thôn 3 số nhà 161', 'Tỉnh Đắk Lắk', 'Huyện Krông Pắc', 'Xã Hòa Đông', '2025-04-18 12:50:20', ''),
+(16, 'Jeanette Nguyen', 'camypujor@mailinator.com', '0914476799', 'Anim corporis qui eu', 'Tỉnh Hậu Giang', 'Thành phố Vị Thanh', 'Phường IV', '2025-04-21 08:07:08', '');
 
 -- --------------------------------------------------------
 
@@ -342,7 +351,7 @@ INSERT INTO `orders` (`id`, `customer_id`, `total_amount`, `status`, `note`, `pa
 (17, 7, 2931243.00, 'delivered', 'cần gấp trong ngày', 'cod', '2025-04-18 06:29:15'),
 (18, 8, 88800000.00, 'pending', 'Harum et iste ut eve', 'cod', '2025-04-18 06:32:59'),
 (19, 9, 1690000.00, 'pending', 'Alias et lorem conse', 'cod', '2025-04-18 12:05:39'),
-(20, 10, 1690000.00, 'pending', 'Eos consectetur vol', 'cod', '2025-04-18 12:08:49'),
+(20, 10, 1690000.00, 'delivered', 'Eos consectetur vol', 'cod', '2025-04-18 12:08:49'),
 (21, 11, 800000.00, 'pending', 'Et sed dolore cumque', 'cod', '2025-04-18 12:11:49'),
 (22, 12, 800000.00, 'pending', 'Velit dolorem dolor', 'cod', '2025-04-18 12:14:01'),
 (23, 2, 90000.00, 'pending', 'Nostrum anim ea cumq', 'cod', '2025-04-18 12:16:29'),
@@ -351,7 +360,8 @@ INSERT INTO `orders` (`id`, `customer_id`, `total_amount`, `status`, `note`, `pa
 (26, 14, 800000.00, 'delivered', 'nhanh', 'bank_transfer', '2025-04-18 12:32:59'),
 (27, 7, 800000.00, 'delivered', 'nhanh lẹ', 'bank_transfer', '2025-04-18 12:38:31'),
 (28, 2, 800000.00, 'delivered', '7h39', 'cod', '2025-04-18 12:39:42'),
-(29, 15, 800000.00, 'delivered', 'á', 'cod', '2025-04-18 12:50:20');
+(29, 15, 800000.00, 'delivered', 'á', 'cod', '2025-04-18 12:50:20'),
+(30, 16, 18287458.00, 'delivered', 'Laborum nihil rerum', 'bank_transfer', '2025-04-21 08:07:08');
 
 -- --------------------------------------------------------
 
@@ -398,7 +408,10 @@ INSERT INTO `order_details` (`id`, `order_id`, `product_id`, `quantity`, `price`
 (24, 26, 6, 1, 800000.00),
 (25, 27, 6, 1, 800000.00),
 (26, 28, 6, 1, 800000.00),
-(27, 29, 6, 1, 800000.00);
+(27, 29, 6, 1, 800000.00),
+(28, 30, 6, 5, 800000.00),
+(29, 30, 3, 6, 2131243.00),
+(30, 30, 5, 1, 1500000.00);
 
 -- --------------------------------------------------------
 
@@ -417,20 +430,72 @@ CREATE TABLE `products` (
   `content` text,
   `original_price` decimal(10,2) NOT NULL DEFAULT '0.00',
   `current_price` decimal(10,2) NOT NULL DEFAULT '0.00',
-  `is_active` tinyint(1) NOT NULL DEFAULT '1'
+  `is_active` tinyint(1) NOT NULL DEFAULT '1',
+  `slug` varchar(255) NOT NULL,
+  `seo_image` varchar(255) DEFAULT NULL,
+  `seo_title` varchar(255) DEFAULT NULL,
+  `seo_description` text,
+  `seo_keywords` text
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Đang đổ dữ liệu cho bảng `products`
 --
 
-INSERT INTO `products` (`id`, `category_id`, `name`, `description`, `stock`, `image`, `created_at`, `content`, `original_price`, `current_price`, `is_active`) VALUES
-(3, 1, 'Mẫu Giày 05', 'Sample description for product.', 50352, 'uploads/products/mau-giay-020-0.png', '2025-04-14 23:41:03', 'This is a sample product description.', 3242421.00, 2131243.00, 1),
-(4, 1, 'Mẫu Giày 06', 'Sample description for product.', 30256, 'uploads/products/mau-giay-019-3c-0.jpg', '2025-04-14 23:41:03', 'Another product with great features.', 2000000.00, 1690000.00, 1),
-(5, 1, 'Mẫu Giày 04', 'Sample description for product.', 2354, 'uploads/products/mau-giay-015-0.png', '2025-04-15 00:01:16', 'This is a sample product description.', 1900000.00, 1500000.00, 1),
-(6, 1, 'Mẫu Giày 03', 'Sample description for product.', 50143, 'uploads/products/mau-giay-015-0.png', '2025-04-15 00:01:29', 'This is a sample product description.fd', 1000000.00, 800000.00, 1),
-(7, 0, 'Mẫu Giày 02', 'Sample description for product.', 2435, 'uploads/products/mau-giay-032-0.png', '2025-04-15 00:01:47', 'This is a sample product description.', 100000.00, 90000.00, 1),
-(8, 0, 'Mẫu Giày 01', '- Giày Adidas Stan Smith x HER Bounty Sneakers giày thể thao nữ trrắng FW2524\r\n- Hàng Chính Hãng\r\n- Cam kết chính hãng 100% nhập từ ADIDAS US, UK, JP - Fake đền x10.\r\n- GIÁ RẺ hơn các shop khác 15-20% - full box, tem, tag, giấy gói chính hãng.', 214, 'uploads/products/mau-giay-015-0.png', '2025-04-15 00:04:59', 'Sản phẩm Giày thể thao của Shop đã được kiểm tra trước khi đóng gói và có video quay lại quá trình đóng hàng và gửi hàng cho khách nguyên vẹn, không có lỗi. Khách hàng lưu ý khi nhận hàng thì quay clip lại quá trình kiểm hàng để tránh trường hợp nhận sai hàng hoặc hàng lỗi. ', 1000000.00, 800000.00, 1);
+INSERT INTO `products` (`id`, `category_id`, `name`, `description`, `stock`, `image`, `created_at`, `content`, `original_price`, `current_price`, `is_active`, `slug`, `seo_image`, `seo_title`, `seo_description`, `seo_keywords`) VALUES
+(3, 1, 'Mẫu Giày 05', 'Sample description for product.', 50352, 'uploads/products/mau-giay-020-0.png', '2025-04-14 23:41:03', 'This is a sample product description.', 3242421.00, 2131243.00, 1, 'mau-giay-05', NULL, NULL, NULL, NULL),
+(4, 1, 'Mẫu Giày 06', 'Sample description for product.', 30256, 'uploads/products/mau-giay-019-3c-0.jpg', '2025-04-14 23:41:03', 'Another product with great features.', 2000000.00, 1690000.00, 1, 'mau-giay-06', NULL, NULL, NULL, NULL),
+(5, 1, 'Mẫu Giày 04', 'Sample description for product.', 2354, 'uploads/products/mau-giay-015-0.png', '2025-04-15 00:01:16', 'This is a sample product description.', 1900000.00, 1500000.00, 1, 'mau-giay-04', NULL, NULL, NULL, NULL),
+(6, 1, 'Mẫu Giày 03', 'Sample description for product.', 50143, 'uploads/products/mau-giay-015-0.png', '2025-04-15 00:01:29', 'This is a sample product description.fd', 1000000.00, 800000.00, 1, 'mau-giay-03', NULL, NULL, NULL, NULL),
+(7, 0, 'Mẫu Giày 02', 'Sample description for product.', 2435, 'uploads/products/mau-giay-032-0.png', '2025-04-15 00:01:47', 'This is a sample product description.', 100000.00, 90000.00, 1, 'mau-giay-02', NULL, NULL, NULL, NULL),
+(8, 14, 'Mẫu Giày 01', '- Giày Adidas Stan Smith x HER Bounty Sneakers giày thể thao nữ trrắng FW2524\r\n- Hàng Chính Hãng\r\n- Cam kết chính hãng 100% nhập từ ADIDAS US, UK, JP - Fake đền x10.\r\n- GIÁ RẺ hơn các shop khác 15-20% - full box, tem, tag, giấy gói chính hãng.', 0, 'uploads/products/mau-giay-015-0.png', '2025-04-15 00:04:59', 'Sản phẩm Giày thể thao của Shop đã được kiểm tra trước khi đóng gói và có video quay lại quá trình đóng hàng và gửi hàng cho khách nguyên vẹn, không có lỗi. Khách hàng lưu ý khi nhận hàng thì quay clip lại quá trình kiểm hàng để tránh trường hợp nhận sai hàng hoặc hàng lỗi.', 1000000.00, 800000.00, 1, 'mau-giay-01', 'Uploads/seo_images/mau-giay-019-3c-0.jpg', 'Mẫu Giày 01', 'mô tả seo mẫu giày 01', 'giày, giày đẹp,');
+
+-- --------------------------------------------------------
+
+--
+-- Cấu trúc bảng cho bảng `reviews`
+--
+
+CREATE TABLE `reviews` (
+  `id` int NOT NULL,
+  `product_id` int NOT NULL,
+  `customer_name` varchar(255) NOT NULL,
+  `rating` int NOT NULL,
+  `comment` text NOT NULL,
+  `is_approved` tinyint(1) DEFAULT '0',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ;
+
+--
+-- Đang đổ dữ liệu cho bảng `reviews`
+--
+
+INSERT INTO `reviews` (`id`, `product_id`, `customer_name`, `rating`, `comment`, `is_approved`, `created_at`) VALUES
+(1, 6, 'NGUYỄN THỊ NGỌC TRÂM', 5, 'tốt', 1, '2025-04-21 07:44:27'),
+(4, 6, 'NGUYỄN THỊ NGỌC TRÂM', 4, 'nice', 0, '2025-04-21 13:04:35'),
+(5, 6, 'Lê Văn Thắngsdsd', 5, 'j', 0, '2025-04-21 13:04:54'),
+(6, 6, 'Nguyễn Thị Minh Thi', 5, 'very good', 0, '2025-04-22 06:27:54');
+
+-- --------------------------------------------------------
+
+--
+-- Cấu trúc bảng cho bảng `review_replies`
+--
+
+CREATE TABLE `review_replies` (
+  `id` int NOT NULL,
+  `review_id` int NOT NULL,
+  `reply_by` varchar(255) NOT NULL,
+  `reply_content` text NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `review_replies`
+--
+
+INSERT INTO `review_replies` (`id`, `review_id`, `reply_by`, `reply_content`, `created_at`) VALUES
+(1, 1, 'Admin', 'Cảm ơn bạn', '2025-04-21 07:55:13');
 
 -- --------------------------------------------------------
 
@@ -471,7 +536,7 @@ CREATE TABLE `settings` (
 --
 
 INSERT INTO `settings` (`id`, `name`, `value`, `updated_at`) VALUES
-(1, 'site_status', '1', '2025-04-15 11:22:56'),
+(1, 'site_status', '1', '2025-04-21 12:29:20'),
 (3, 'default_font_size', '16', '2025-04-15 11:10:27'),
 (4, 'default_font_weight', 'normal', '2025-04-15 11:10:34'),
 (10, 'scroll_top', '1', '2025-04-18 07:31:45'),
@@ -479,8 +544,12 @@ INSERT INTO `settings` (`id`, `name`, `value`, `updated_at`) VALUES
 (14, 'columns_425', '3', '2025-04-15 13:56:12'),
 (15, 'columns_768', '4', '2025-04-15 13:47:14'),
 (16, 'columns_1200', '5', '2025-04-15 13:47:14'),
-(17, 'columns_max', '5', '2025-04-15 14:36:16'),
-(88, 'favicon', '6801ef7d9dc18-github.png', '2025-04-18 06:21:49');
+(17, 'columns_max', '5', '2025-04-21 12:15:57'),
+(88, 'favicon', '68073819ccee9-fhc.png', '2025-04-22 06:32:57'),
+(91, 'default_bg_color', '#000000', '2025-04-21 12:16:48'),
+(92, 'default_text_color', '#000000', '2025-04-21 03:49:32'),
+(93, 'default_link_color', '#007bff', '2025-04-21 03:49:32'),
+(94, 'default_opacity', '1', '2025-04-21 03:49:32');
 
 -- --------------------------------------------------------
 
@@ -590,7 +659,22 @@ ALTER TABLE `order_details`
 --
 ALTER TABLE `products`
   ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `slug` (`slug`),
   ADD KEY `category_id` (`category_id`);
+
+--
+-- Chỉ mục cho bảng `reviews`
+--
+ALTER TABLE `reviews`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `product_id` (`product_id`);
+
+--
+-- Chỉ mục cho bảng `review_replies`
+--
+ALTER TABLE `review_replies`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `review_id` (`review_id`);
 
 --
 -- Chỉ mục cho bảng `roles`
@@ -625,7 +709,7 @@ ALTER TABLE `admins`
 -- AUTO_INCREMENT cho bảng `admin_logins`
 --
 ALTER TABLE `admin_logins`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
 
 --
 -- AUTO_INCREMENT cho bảng `categories`
@@ -661,7 +745,7 @@ ALTER TABLE `coupons`
 -- AUTO_INCREMENT cho bảng `customers`
 --
 ALTER TABLE `customers`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- AUTO_INCREMENT cho bảng `logos`
@@ -673,19 +757,31 @@ ALTER TABLE `logos`
 -- AUTO_INCREMENT cho bảng `orders`
 --
 ALTER TABLE `orders`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
 
 --
 -- AUTO_INCREMENT cho bảng `order_details`
 --
 ALTER TABLE `order_details`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
 
 --
 -- AUTO_INCREMENT cho bảng `products`
 --
 ALTER TABLE `products`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
+
+--
+-- AUTO_INCREMENT cho bảng `reviews`
+--
+ALTER TABLE `reviews`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT cho bảng `review_replies`
+--
+ALTER TABLE `review_replies`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT cho bảng `roles`
@@ -697,7 +793,7 @@ ALTER TABLE `roles`
 -- AUTO_INCREMENT cho bảng `settings`
 --
 ALTER TABLE `settings`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=91;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=114;
 
 --
 -- AUTO_INCREMENT cho bảng `slides`
@@ -733,6 +829,18 @@ ALTER TABLE `orders`
 ALTER TABLE `order_details`
   ADD CONSTRAINT `order_details_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `order_details_ibfk_2` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE;
+
+--
+-- Ràng buộc cho bảng `reviews`
+--
+ALTER TABLE `reviews`
+  ADD CONSTRAINT `reviews_ibfk_1` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE;
+
+--
+-- Ràng buộc cho bảng `review_replies`
+--
+ALTER TABLE `review_replies`
+  ADD CONSTRAINT `review_replies_ibfk_1` FOREIGN KEY (`review_id`) REFERENCES `reviews` (`id`) ON DELETE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

@@ -21,12 +21,13 @@ try {
     }
 
     // Lấy sản phẩm
-    $stmt = $pdo->prepare("SELECT id, name, image, description, stock, original_price, current_price FROM products WHERE is_active = 1 ORDER BY created_at DESC");
+    $stmt = $pdo->prepare("SELECT id, slug, name, image, description, stock, original_price, current_price FROM products WHERE is_active = 1 ORDER BY created_at DESC");
     $stmt->execute();
     $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // Xử lý thêm vào giỏ hàng
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
+        header('Content-Type: application/json'); // Thiết lập header JSON
         $product_id = (int)$_POST['product_id'];
         $quantity = (int)$_POST['quantity'];
 
@@ -56,27 +57,21 @@ try {
                         'image' => $product['image']
                     ];
                 }
-                $_SESSION['success'] = 'Đã thêm vào giỏ hàng!';
-                header('Location: http://localhost/2/public/pages/cart.php');
+                echo json_encode(['success' => true, 'message' => 'Đã thêm vào giỏ hàng!']);
                 exit;
             } else {
-                $_SESSION['error'] = 'Số lượng vượt quá tồn kho!';
+                echo json_encode(['success' => false, 'message' => 'Số lượng vượt quá tồn kho!']);
+                exit;
             }
         } else {
-            $_SESSION['error'] = 'Sản phẩm hết hàng hoặc không hợp lệ!';
-        }
-        header('Location: http://localhost/2/public/pages/product.php');
-        exit;
-    } else {
-        error_log("Request method: " . $_SERVER['REQUEST_METHOD']);
-        if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['add_to_cart'])) {
-            $_SESSION['error'] = 'Yêu cầu không hợp lệ! Vui lòng thử lại.';
-            header('Location: http://localhost/2/public/pages/product.php');
+            echo json_encode(['success' => false, 'message' => 'Sản phẩm hết hàng hoặc không hợp lệ!']);
             exit;
         }
     }
 } catch (Exception $e) {
     error_log('Product page error: ' . $e->getMessage());
+    header('Content-Type: application/json');
+    echo json_encode(['success' => false, 'message' => 'Lỗi hệ thống: ' . $e->getMessage()]);
     $products = [];
     $columns = [
         'columns_375' => 2,
@@ -97,6 +92,10 @@ try {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Thêm SweetAlert2 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Thêm jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
         body {
             font-family: 'Roboto', sans-serif;
@@ -253,20 +252,32 @@ try {
         .rating i:hover {
             transform: scale(1.2);
         }
+        .add-to-cart-form {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+            padding: 0 15px;
+        }
+        .add-to-cart-form input[type="number"] {
+            width: 50px;
+            padding: 6px;
+            font-size: 14px;
+            border-radius: 4px;
+            border: 1px solid #ced4da;
+        }
         .add-to-cart {
             background: linear-gradient(135deg, rgb(227, 9, 9), rgb(142, 18, 18));
             color: #fff;
             border: none;
-            padding: 10px;
-            width: 100%;
-            font-size: 1em;
+            padding: 8px 15px;
+            font-size: 14px;
             font-weight: 500;
             cursor: pointer;
             transition: background 0.3s ease, transform 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
+            border-radius: 4px;
+            flex-grow: 1;
         }
         .add-to-cart:hover {
             background: linear-gradient(135deg, #0652dd, #4dabf7);
@@ -330,6 +341,17 @@ try {
             color: #00b894;
             background: #e6fff7;
         }
+        .product-description {
+            font-size: 0.9em;
+            color: #636e72;
+            margin: 8px 0;
+            height: 40px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
         @media (max-width: 768px) {
             .product-image {
                 height: 180px;
@@ -341,9 +363,14 @@ try {
             .current-price {
                 font-size: 1.3em;
             }
+            .add-to-cart-form input[type="number"] {
+                width: 70px;
+                padding: 5px;
+                font-size: 13px;
+            }
             .add-to-cart {
-                font-size: 0.95em;
-                padding: 8px;
+                font-size: 13px;
+                padding: 7px 12px;
             }
             .hover-icons a {
                 width: 35px;
@@ -362,9 +389,14 @@ try {
             .current-price {
                 font-size: 1.2em;
             }
+            .add-to-cart-form input[type="number"] {
+                width: 60px;
+                padding: 4px;
+                font-size: 12px;
+            }
             .add-to-cart {
-                font-size: 0.9em;
-                padding: 7px;
+                font-size: 12px;
+                padding: 6px 10px;
             }
             .hover-icons a {
                 width: 32px;
@@ -383,9 +415,14 @@ try {
             .current-price {
                 font-size: 14px;
             }
+            .add-to-cart-form input[type="number"] {
+                width: 55px;
+                padding: 4px;
+                font-size: 12px;
+            }
             .add-to-cart {
-                font-size: 0.85em;
-                padding: 6px;
+                font-size: 12px;
+                padding: 6px 8px;
             }
             .hover-icons a {
                 width: 30px;
@@ -397,65 +434,103 @@ try {
 </head>
 <body>
 <?php require_once 'C:/laragon/www/2/public/includes/header.php'; ?>
-    <div class="container">
-        <h1>Sản Phẩm</h1>
-        <?php if (isset($_SESSION['error'])): ?>
-            <p class="error"><?php echo $_SESSION['error']; unset($_SESSION['error']); ?></p>
-        <?php endif; ?>
-        <?php if (isset($_SESSION['success'])): ?>
-            <p class="success"><?php echo $_SESSION['success']; unset($_SESSION['success']); ?></p>
-        <?php endif; ?>
-        <div class="product-grid">
-            <?php foreach ($products as $product): ?>
-                <?php
-                $discount = $product['original_price'] > $product['current_price'] && $product['original_price'] > 0
-                    ? round(($product['original_price'] - $product['current_price']) / $product['original_price'] * 100)
-                    : 0;
-                ?>
-                <div class="product-card">
-                    <a href="/2/product/<?php echo $product['id']; ?>" class="product-link"></a>
-                    <?php if ($discount > 0): ?>
-                        <span class="discount-badge"><?php echo $discount; ?>% OFF</span>
-                    <?php endif; ?>
-                    <div class="product-image">
-                        <img src="<?php echo $product['image'] ? 'http://localhost/2/admin/' . htmlspecialchars($product['image'], ENT_QUOTES) : 'http://localhost/2/admin/uploads/products/default.jpg'; ?>" alt="<?php echo htmlspecialchars($product['name'], ENT_QUOTES); ?>">
-                        <div class="hover-icons">
-                            <a href="/2/public/pages/<?php echo $product['id']; ?>" title="Xem chi tiết" onclick="event.stopPropagation();"><i class="fas fa-eye"></i></a>
-                            <a href="#" title="Yêu thích" onclick="event.stopPropagation();"><i class="fas fa-heart"></i></a>
-                            <a href="#" title="So sánh" onclick="event.stopPropagation();"><i class="fas fa-balance-scale"></i></a>
-                        </div>
-                    </div>
-                    <div class="product-info">
-                        <h5><?php echo htmlspecialchars($product['name'], ENT_QUOTES); ?></h5>
-                        <div class="product-price">
-                            <?php if ($product['original_price'] > $product['current_price']): ?>
-                                <span class="original-price"><?php echo number_format($product['original_price'], 0, ',', '.'); ?>đ</span>
-                            <?php endif; ?>
-                            <span class="current-price"><?php echo number_format($product['current_price'], 0, ',', '.'); ?>đ</span>
-                        </div>
-                        <div class="stock-status <?php echo $product['stock'] > 0 ? 'in' : 'out'; ?>">
-                            <?php echo $product['stock'] > 0 ? 'Còn hàng' : 'Hết hàng'; ?>
-                        </div>
-                        <div class="rating">
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                        </div>
-                        <form id="cart-form-<?php echo $product['id']; ?>" method="POST" action="/2/public/pages/product.php">
-                            <input type="hidden" name="product_id" value="<?php echo $product['id']; ?>">
-                            <input type="hidden" name="quantity" value="1">
-                            <button type="submit" name="add_to_cart" class="add-to-cart" <?php echo $product['stock'] <= 0 ? 'disabled' : ''; ?>>
-                                <i class="fas fa-shopping-cart"></i> Thêm vào giỏ hàng
-                            </button>
-                        </form>
+<div class="container">
+    <h1>Sản Phẩm</h1>
+    <?php if (isset($_SESSION['error'])): ?>
+        <p class="error"><?php echo $_SESSION['error']; unset($_SESSION['error']); ?></p>
+    <?php endif; ?>
+    <?php if (isset($_SESSION['success'])): ?>
+        <p class="success"><?php echo $_SESSION['success']; unset($_SESSION['success']); ?></p>
+    <?php endif; ?>
+    <div class="product-grid">
+        <?php foreach ($products as $product): ?>
+            <?php
+            $discount = $product['original_price'] > $product['current_price'] && $product['original_price'] > 0
+                ? round(($product['original_price'] - $product['current_price']) / $product['original_price'] * 100)
+                : 0;
+            ?>
+            <div class="product-card">
+                <a href="/2/public/pages/<?php echo htmlspecialchars($product['slug'], ENT_QUOTES); ?>" class="product-link"></a>
+                <?php if ($discount > 0): ?>
+                    <span class="discount-badge"><?php echo $discount; ?>% OFF</span>
+                <?php endif; ?>
+                <div class="product-image">
+                    <img src="<?php echo $product['image'] ? 'http://localhost/2/admin/' . htmlspecialchars($product['image'], ENT_QUOTES) : 'http://localhost/2/admin/uploads/products/default.jpg'; ?>" alt="<?php echo htmlspecialchars($product['name'], ENT_QUOTES); ?>">
+                    <div class="hover-icons">
+                        <a href="/2/public/pages/<?php echo htmlspecialchars($product['slug'], ENT_QUOTES); ?>" title="Xem chi tiết" onclick="event.stopPropagation();"><i class="fas fa-eye"></i></a>
+                        <a href="#" title="Yêu thích" onclick="event.stopPropagation();"><i class="fas fa-heart"></i></a>
+                        <a href="#" title="So sánh" onclick="event.stopPropagation();"><i class="fas fa-balance-scale"></i></a>
                     </div>
                 </div>
-            <?php endforeach; ?>
-        </div>
+                <div class="product-info">
+                    <h5><?php echo htmlspecialchars($product['name'], ENT_QUOTES); ?></h5>
+                    <div class="product-price">
+                        <?php if ($product['original_price'] > $product['current_price']): ?>
+                            <span class="original-price"><?php echo number_format($product['original_price'], 0, ',', '.'); ?>đ</span>
+                        <?php endif; ?>
+                        <span class="current-price"><?php echo number_format($product['current_price'], 0, ',', '.'); ?>đ</span>
+                    </div>
+                    <div class="stock-status <?php echo $product['stock'] > 0 ? 'in' : 'out'; ?>">
+                        <?php echo $product['stock'] > 0 ? 'Còn hàng' : 'Hết hàng'; ?>
+                    </div>
+                    <div class="rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <form id="cart-form-<?php echo $product['id']; ?>" class="add-to-cart-form">
+                        <input type="hidden" name="product_id" value="<?php echo $product['id']; ?>">
+                        <input type="number" name="quantity" value="1" min="1" max="<?php echo $product['stock']; ?>" class="form-control">
+                        <button type="submit" name="add_to_cart" class="add-to-cart" <?php echo $product['stock'] <= 0 ? 'disabled' : ''; ?>>
+                            <i class="fas fa-shopping-cart"></i> Mua ngay
+                        </button>
+                    </form>
+                </div>
+            </div>
+        <?php endforeach; ?>
     </div>
-    <?php require_once 'C:/laragon/www/2/public/includes/footer.php'; ?>
+</div>
+<?php require_once 'C:/laragon/www/2/public/includes/footer.php'; ?>
+
+<!-- JavaScript xử lý AJAX và SweetAlert2 -->
+<script>
+$(document).ready(function() {
+    $('.add-to-cart-form').on('submit', function(e) {
+        e.preventDefault(); // Ngăn hành vi submit mặc định
+        var form = $(this);
+        var formData = form.serialize(); // Lấy dữ liệu form
+
+        $.ajax({
+            url: '/2/public/pages/product.php',
+            type: 'POST',
+            data: formData + '&add_to_cart=1', // Thêm tham số add_to_cart
+            dataType: 'json',
+            success: function(result) {
+                Swal.fire({
+                    icon: result.success ? 'success' : 'error',
+                    title: result.success ? 'Thành công' : 'Lỗi',
+                    text: result.message,
+                    confirmButtonText: 'OK'
+                }).then(() => {
+                    if (result.success) {
+                        window.location.href = 'http://localhost/2/public/pages/cart.php';
+                    }
+                });
+            },
+            error: function(xhr, status, error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Lỗi',
+                    text: 'Lỗi AJAX: ' + xhr.responseText,
+                    confirmButtonText: 'OK'
+                });
+            }
+        });
+    });
+});
+</script>
 
 </body>
 </html>

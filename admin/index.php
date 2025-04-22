@@ -39,6 +39,7 @@ if ($page === 'admins') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo SITE_NAME; ?></title>
+    <link rel="shortcut icon" href="http://localhost/2/admin/uploads/favicon/fhc.png" type="image/x-icon">
     <link rel="stylesheet" href="assets/css/sb-admin-2.min.css">
     <link rel="stylesheet" href="assets/vendor/fontawesome/css/all.min.css">
     <link rel="stylesheet" href="assets/css/custom.css">

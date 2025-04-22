@@ -32,6 +32,8 @@ try {
     $slides = [];
     $featured_products = [];
 }
+
+
 ?>
 
 <!DOCTYPE html>
@@ -60,7 +62,6 @@ try {
         }
         p {
             font-size: 1.2em;
-            color: #666;
         }
         /* Carousel */
         .carousel {

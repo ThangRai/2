@@ -165,7 +165,7 @@ try {
                     $mail->addAddress('badaotulong123@gmail.com');
 
                     $mail->isHTML(true);
-                    $mail->Subject = 'Xác nhận đơn hàng #' . $order_id;
+                    $mail->Subject = 'Đơn hàng mới #' . $order_id;
                     $mail->Body = '
                         <h2>Xác nhận đơn hàng #' . $order_id . '</h2>
                         <p><strong>Khách hàng:</strong> ' . htmlspecialchars($full_name) . '</p>

@@ -1,1 +1,6 @@
 ErrorDocument 404 /2/public/404.php
+RewriteEngine On
+RewriteBase /2/public/
+
+# Chuyển hướng /pages/{slug} tới product_detail.php
+RewriteRule ^pages/([a-z0-9-]+)/?$ pages/product_detail.php?slug=$1 [L,NC]

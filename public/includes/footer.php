@@ -20,9 +20,7 @@ try {
 <style>
 /* Footer Styles */
 .footer {
-    background: linear-gradient(135deg, #1e3a8a, #4b5563);
-    color: #e5e7eb;
-    padding: 60px 0 20px;
+    color:rgb(75, 75, 75);
     position: relative;
     font-family: 'Roboto', sans-serif;
 }
@@ -89,7 +87,6 @@ try {
     padding-top: 20px;
     text-align: center;
     font-size: 0.9em;
-    color: #9ca3af;
 }
 .footer-bottom p {
     margin: 0;
@@ -256,7 +253,7 @@ try {
     <div class="container">
         <div class="footer-content">
             <!-- About Section -->
-            <div class="footer-section about">
+            <!-- <div class="footer-section about">
                 <h3>Về Chúng Tôi</h3>
                 <p>
                     Công ty TNHH Thắng Raiy cung cấp các sản phẩm chất lượng cao, dịch vụ tận tâm, và trải nghiệm mua sắm tuyệt vời.
@@ -264,7 +261,7 @@ try {
             </div>
 
             <!-- Quick Links Section -->
-            <div class="footer-section links">
+            <!-- <div class="footer-section links">
                 <h3>Liên Kết Nhanh</h3>
                 <ul>
                     <li><a href="/2/public/">Trang Chủ</a></li>
@@ -273,10 +270,10 @@ try {
                     <li><a href="/2/public/pages/checkout.php">Thanh Toán</a></li>
                     <li><a href="/2/public/pages/contact.php">Liên Hệ</a></li>
                 </ul>
-            </div>
+            </div> -->
 
             <!-- Contact Section -->
-            <div class="footer-section contact">
+            <!-- <div class="footer-section contact">
                 <h3>Thông Tin Liên Hệ</h3>
                 <?php foreach ($contacts as $contact): ?>
                     <div class="contact-item">
@@ -315,7 +312,7 @@ try {
                     </div>
                 <?php endforeach; ?>
             </div>
-        </div>
+        </div> --> 
 
         <!-- Footer Bottom -->
         <div class="footer-bottom">

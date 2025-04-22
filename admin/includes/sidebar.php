@@ -30,10 +30,22 @@
             <span>Danh Mục</span>
         </a>
     </li>
+    <li class="nav-item <?php echo $page == 'orders' ? 'active' : ''; ?>">
+        <a class="nav-link" href="index.php?page=orders">
+            <i class="fas fa-fw fa-shopping-cart"></i>
+            <span>Đơn Hàng</span>
+        </a>
+    </li>
     <li class="nav-item <?php echo $page == 'products' ? 'active' : ''; ?>">
         <a class="nav-link" href="index.php?page=products">
             <i class="fas fa-fw fa-box"></i>
             <span>Sản Phẩm</span>
+        </a>
+    </li>
+    <li class="nav-item <?php echo $page == 'danhgia' ? 'active' : ''; ?>">
+        <a class="nav-link" href="index.php?page=danhgia">
+            <i class="fas fa-fw fa-star"></i>
+            <span>Đánh giá</span>
         </a>
     </li>
     <li class="nav-item <?php echo $page == 'cauhinhcot' ? 'active' : ''; ?>">
@@ -52,12 +64,6 @@
         <a class="nav-link" href="index.php?page=slideshow">
             <i class="fas fa-fw fa-images"></i>
             <span>Hình Slide</span>
-        </a>
-    </li>
-    <li class="nav-item <?php echo $page == 'orders' ? 'active' : ''; ?>">
-        <a class="nav-link" href="index.php?page=orders">
-            <i class="fas fa-fw fa-shopping-cart"></i>
-            <span>Đơn Hàng</span>
         </a>
     </li>
     <li class="nav-item <?php echo $page == 'customers' ? 'active' : ''; ?>">
