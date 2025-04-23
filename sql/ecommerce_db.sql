@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Máy chủ: localhost:3306
--- Thời gian đã tạo: Th4 22, 2025 lúc 07:46 AM
+-- Thời gian đã tạo: Th4 23, 2025 lúc 01:22 PM
 -- Phiên bản máy phục vụ: 8.4.3
 -- Phiên bản PHP: 8.3.16
 
@@ -110,7 +110,39 @@ INSERT INTO `admin_logins` (`id`, `admin_id`, `admin_name`, `ip_address`, `login
 (37, 1, 'Thắng Rai', '::1', '2025-04-22 06:18:59'),
 (38, 8, 'Lê Văn Bá Lợi', '::1', '2025-04-22 06:19:12'),
 (39, 1, 'Thắng Rai', '::1', '2025-04-22 06:19:53'),
-(40, 8, 'Lê Văn Bá Lợi', '::1', '2025-04-22 07:29:48');
+(40, 8, 'Lê Văn Bá Lợi', '::1', '2025-04-22 07:29:48'),
+(41, 1, 'Thắng Rai', '::1', '2025-04-23 03:10:14');
+
+-- --------------------------------------------------------
+
+--
+-- Cấu trúc bảng cho bảng `blogs`
+--
+
+CREATE TABLE `blogs` (
+  `id` int NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `slug` varchar(255) NOT NULL,
+  `description` text NOT NULL,
+  `content` longtext NOT NULL,
+  `views` int DEFAULT '0',
+  `thumbnail` varchar(255) DEFAULT NULL,
+  `is_published` tinyint(1) DEFAULT '1',
+  `seo_title` varchar(255) DEFAULT NULL,
+  `seo_description` varchar(160) DEFAULT NULL,
+  `seo_keywords` text,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `blogs`
+--
+
+INSERT INTO `blogs` (`id`, `title`, `slug`, `description`, `content`, `views`, `thumbnail`, `is_published`, `seo_title`, `seo_description`, `seo_keywords`, `created_at`, `updated_at`) VALUES
+(3, 'Nhập mẫu nội dung tin tức và khuyến mãi cho website mẫu 3', 'a', 'Mẫu giày này lấy cảm hứng từ các phong cách thể thao huyền thoại trong quá khứ và đưa đến tương lai. Giày mang phong cách hàng ngày với thân giày bằng da mượt mà.', '<p>Mẫu giày này lấy cảm hứng từ các phong cách thể thao huyền thoại trong quá khứ và đưa đến tương lai. Giày mang phong cách hàng ngày với thân giày bằng da mượt mà.</p><figure class=\"image\"><img src=\"http://localhost/2/admin/uploads/ckeditor/6808b58b618b7_ChatGPT Image 14_51_19 22 thg 4, 2025.png\"></figure>', 4, 'Uploads/thumbnails/1745399738_bl1.jpg', 1, 'Nhập mẫu nội dung tin tức và khuyến mãi cho website mẫu 3', 'Nhập mẫu nội dung tin tức và khuyến mãi cho website mẫu 3', 'dsd', '2025-04-23 09:15:38', '2025-04-23 11:28:18'),
+(4, 'Nhập mẫu nội dung tin tức và khuyến mãi cho website mẫu 2', 'nhap-mau-noi-dung-tin-tuc-va-khuyen-mai-cho-website-mau-2', 'Lorem Ipsum chỉ đơn giản là một đoạn văn bản giả, được dùng vào việc trình bày và dàn trang phục vụ cho in ấn. Lorem Ipsum đã được sử dụng như một văn bản chuẩn', '<p>Lorem Ipsum chỉ đơn giản là một đoạn văn bản giả, được dùng vào việc trình bày và dàn trang phục vụ cho in ấn. Lorem Ipsum đã được sử dụng như một văn bản chuẩn</p><figure class=\"image\"><img src=\"http://localhost/2/admin/uploads/ckeditor/6808b312ddb1b_nhap-mau-noi-dung-tin-tuc-va-khuyen-mai-cho-website-mau-2-0.jpg\"></figure>', 2, 'Uploads/thumbnails/1745400605_nhap-mau-noi-dung-tin-tuc-va-khuyen-mai-cho-website-mau-2-0.jpg', 1, 'Nhập mẫu nội dung tin tức và khuyến mãi cho website mẫu 2', 'Nhập mẫu nội dung tin tức và khuyến mãi cho website mẫu 2', 'giày, giày đẹp,', '2025-04-23 09:30:05', '2025-04-23 11:12:08'),
+(5, 'Nhập mẫu nội dung tin tức và khuyến mãi cho website mẫu 1', 'nhap-mau-noi-dung-tin-tuc-va-khuyen-mai-cho-website-mau-1', 'Hơn 300+ mẫu giày Adidas, Nike có tại shop từ STANSMITH, SUPERSTAR, ULTRABOOST, ZX 2k đến ADIDAS 4D ...', '<h2><strong>Thông tin sản phẩm:</strong></h2><p>- Giày Adidas Stan Smith x HER Bounty Sneakers giày thể thao nữ trrắng FW2524</p><h3><strong>- Hàng Chính Hãng</strong></h3><p>- Cam kết chính hãng 100% nhập từ ADIDAS US, UK, JP - Fake đền x10.</p><p>- GIÁ RẺ hơn các shop khác 15-20% - full box, tem, tag, giấy gói chính hãng.</p><h3><strong>- Miễn phí đổi size, đổi mẫu trong vòng 3 ngày.</strong></h3><h3><strong>- NHIỀU MẪU:</strong></h3><p>* Hơn 300+ mẫu giày Adidas, Nike có tại shop từ STANSMITH, SUPERSTAR, ULTRABOOST, ZX 2k đến ADIDAS 4D ...</p><p>+ Nhiệm vụ của Web Số sẽ cài đặt và tối ưu quảng cáo Google cho quý khách trong quá trình hoạt động của quảng cáo. + Theo dõi quảng cáo, tối ưu mẫu quảng cáo khi cần thiết. + Thay đổi mục tiêu quảng cáo và từ khóa cho phù hợp với dịch vụ của quý khách. Chi phí web Số sẽ nhận 15% dựa vào số tiền khách hàng nạp vào tài khoản quảng cáo. VD: Quý khách nạp 5tr vào tk quảng cáo, thì cần chuyển khoản 5.750.000 và Web Số sẽ nhận 750.000 phí quản lý quảng cáo và chi phí nạp tiền vào Google. % Chi phí có thể thay đổi tùy vào khách hàng chạy ngân sách nhiều hay ít.</p><figure class=\"media\"><div data-oembed-url=\"https://www.youtube.com/watch?v=ECxVfrwwTp0&amp;list=RDSK7GEHzTmAA&amp;index=8\"><div style=\"position: relative; padding-bottom: 100%; height: 0; padding-bottom: 56.2493%;\"><iframe src=\"https://www.youtube.com/embed/ECxVfrwwTp0\" style=\"position: absolute; width: 100%; height: 100%; top: 0; left: 0;\" frameborder=\"0\" allow=\"autoplay; encrypted-media\" allowfullscreen=\"\"></iframe></div></div></figure>', 16, 'Uploads/thumbnails/1745400662_nhap-mau-noi-dung-tin-tuc-website-mau-1-0.jpg', 1, 'Nhập mẫu nội dung tin tức và khuyến mãi cho website mẫu 1', 'Nhập mẫu nội dung tin tức và khuyến mãi cho website mẫu 1', 'giày, giày đẹp,', '2025-04-23 09:31:02', '2025-04-23 11:28:20');
 
 -- --------------------------------------------------------
 
@@ -137,7 +169,8 @@ INSERT INTO `categories` (`id`, `name`, `parent_id`, `link`, `status`, `order`, 
 (11, 'Trang chủ', 0, 'http://localhost/2/public/', 1, 0, '2025-04-15 09:09:34', '2025-04-15 09:13:13'),
 (12, 'Giới thiệu', 0, 'http://localhost/2/public/gioithieu.php', 1, 1, '2025-04-15 09:10:17', '2025-04-18 13:46:59'),
 (14, 'Sản phẩm', 0, 'http://localhost/2/public/pages/product.php', 1, 4, '2025-04-15 09:45:23', '2025-04-18 07:01:18'),
-(15, 'Liên hệ', 0, 'http://localhost/2/public/pages/lienhe.php', 1, 5, '2025-04-18 07:01:51', '2025-04-18 07:02:03');
+(15, 'Liên hệ', 0, 'http://localhost/2/public/pages/lienhe.php', 1, 6, '2025-04-18 07:01:51', '2025-04-23 09:51:59'),
+(16, 'Blog', 0, 'http://localhost/2/public/pages/blog.php', 1, 5, '2025-04-23 09:51:53', '2025-04-23 09:51:53');
 
 -- --------------------------------------------------------
 
@@ -292,6 +325,32 @@ INSERT INTO `customers` (`id`, `name`, `email`, `phone`, `address`, `province`, 
 -- --------------------------------------------------------
 
 --
+-- Cấu trúc bảng cho bảng `customer_reviews`
+--
+
+CREATE TABLE `customer_reviews` (
+  `id` int NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `rating` int NOT NULL,
+  `description` text NOT NULL,
+  `content` text NOT NULL,
+  `is_visible` tinyint(1) DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `avatar` varchar(255) DEFAULT NULL
+) ;
+
+--
+-- Đang đổ dữ liệu cho bảng `customer_reviews`
+--
+
+INSERT INTO `customer_reviews` (`id`, `name`, `rating`, `description`, `content`, `is_visible`, `created_at`, `avatar`) VALUES
+(1, 'Lê Văn Thắng', 5, 'Hồ chí minh', 'Tôi rất hài lòng về tính thẩm mỹ của giao diện cũng như những chức năng của website mang lại, từ khi có website chúng tôi tiết kiệm được chi phí thuê nhân công. Vì thế, chắc chắc tôi sẽ giới thiệu công ty của các bạn với những người bạn của tôi khi họ có nhu cầu thiết kế web.', 1, '2025-04-23 03:26:07', '68085f724aa4a_yk1.jpg'),
+(3, 'NGUYỄN THỊ NGỌC TRÂM', 5, 'Hà nội', 'Rất tuyệt vời! Thật khó tin là chúng tôi có thể lập được một website bán hàng trực tuyến lại đơn giản và nhanh chóng đến vậy. Từ khi có website số lượng đơn hàng tăng lên, công việc kinh doanh của công ty tôi trở nên thuận lợi hơn rất nhiều. Lượng khách hàng biết đến và mua hàng của chúng...', 1, '2025-04-23 03:38:25', '680860be94ef5_khach-hang-4.jpg'),
+(4, 'Minh Blbeu', 5, 'Đà Nẵng', 'Sau khi nhận được website do Web Số thiết kế tôi không hề sử dụng thêm bất cứ dịch vụ nào của công ty, nhưng các nhân viên ở đây rất nhiệt tình, giúp tôi nhanh chóng khắc phục các vấn đề mà web mắc phải.Tôi rất hài lòng về dịch vụ của công ty', 1, '2025-04-23 03:39:09', '680860dde643f_Image-User-4.jpg');
+
+-- --------------------------------------------------------
+
+--
 -- Cấu trúc bảng cho bảng `logos`
 --
 
@@ -416,6 +475,35 @@ INSERT INTO `order_details` (`id`, `order_id`, `product_id`, `quantity`, `price`
 -- --------------------------------------------------------
 
 --
+-- Cấu trúc bảng cho bảng `partners`
+--
+
+CREATE TABLE `partners` (
+  `id` int NOT NULL,
+  `logo` varchar(255) DEFAULT NULL,
+  `name` varchar(255) NOT NULL,
+  `description` text,
+  `link` varchar(255) DEFAULT NULL,
+  `is_visible` tinyint(1) DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `partners`
+--
+
+INSERT INTO `partners` (`id`, `logo`, `name`, `description`, `link`, `is_visible`, `created_at`, `updated_at`) VALUES
+(12, '1745405176_dt1.png', '1', '', '', 1, '2025-04-23 10:46:16', '2025-04-23 10:46:16'),
+(13, '1745405192_dt2.png', '2', '', '', 1, '2025-04-23 10:46:32', '2025-04-23 10:46:32'),
+(14, '1745405202_dt3.png', '3', '', '', 1, '2025-04-23 10:46:42', '2025-04-23 10:46:42'),
+(15, '1745405212_dt4.png', '4', '', '', 1, '2025-04-23 10:46:52', '2025-04-23 10:46:52'),
+(16, '1745405221_dt5.png', '5', '', '', 1, '2025-04-23 10:47:01', '2025-04-23 10:47:01'),
+(17, '1745405230_dt6.png', '6', '', '', 1, '2025-04-23 10:47:10', '2025-04-23 10:50:53');
+
+-- --------------------------------------------------------
+
+--
 -- Cấu trúc bảng cho bảng `products`
 --
 
@@ -423,11 +511,11 @@ CREATE TABLE `products` (
   `id` int NOT NULL,
   `category_id` int NOT NULL,
   `name` varchar(255) NOT NULL,
-  `description` text,
+  `description` longtext,
   `stock` int NOT NULL,
   `image` varchar(255) DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `content` text,
+  `content` longtext,
   `original_price` decimal(10,2) NOT NULL DEFAULT '0.00',
   `current_price` decimal(10,2) NOT NULL DEFAULT '0.00',
   `is_active` tinyint(1) NOT NULL DEFAULT '1',
@@ -444,11 +532,11 @@ CREATE TABLE `products` (
 
 INSERT INTO `products` (`id`, `category_id`, `name`, `description`, `stock`, `image`, `created_at`, `content`, `original_price`, `current_price`, `is_active`, `slug`, `seo_image`, `seo_title`, `seo_description`, `seo_keywords`) VALUES
 (3, 1, 'Mẫu Giày 05', 'Sample description for product.', 50352, 'uploads/products/mau-giay-020-0.png', '2025-04-14 23:41:03', 'This is a sample product description.', 3242421.00, 2131243.00, 1, 'mau-giay-05', NULL, NULL, NULL, NULL),
-(4, 1, 'Mẫu Giày 06', 'Sample description for product.', 30256, 'uploads/products/mau-giay-019-3c-0.jpg', '2025-04-14 23:41:03', 'Another product with great features.', 2000000.00, 1690000.00, 1, 'mau-giay-06', NULL, NULL, NULL, NULL),
+(4, 1, 'Mẫu Giày 06', 'Sample description for product.', 30256, 'uploads/products/mau-giay-019-3c-0.jpg', '2025-04-14 23:41:03', 'Another product with great features.', 2000000.00, 1690000.00, 0, 'mau-giay-06', NULL, NULL, NULL, NULL),
 (5, 1, 'Mẫu Giày 04', 'Sample description for product.', 2354, 'uploads/products/mau-giay-015-0.png', '2025-04-15 00:01:16', 'This is a sample product description.', 1900000.00, 1500000.00, 1, 'mau-giay-04', NULL, NULL, NULL, NULL),
 (6, 1, 'Mẫu Giày 03', 'Sample description for product.', 50143, 'uploads/products/mau-giay-015-0.png', '2025-04-15 00:01:29', 'This is a sample product description.fd', 1000000.00, 800000.00, 1, 'mau-giay-03', NULL, NULL, NULL, NULL),
 (7, 0, 'Mẫu Giày 02', 'Sample description for product.', 2435, 'uploads/products/mau-giay-032-0.png', '2025-04-15 00:01:47', 'This is a sample product description.', 100000.00, 90000.00, 1, 'mau-giay-02', NULL, NULL, NULL, NULL),
-(8, 14, 'Mẫu Giày 01', '- Giày Adidas Stan Smith x HER Bounty Sneakers giày thể thao nữ trrắng FW2524\r\n- Hàng Chính Hãng\r\n- Cam kết chính hãng 100% nhập từ ADIDAS US, UK, JP - Fake đền x10.\r\n- GIÁ RẺ hơn các shop khác 15-20% - full box, tem, tag, giấy gói chính hãng.', 0, 'uploads/products/mau-giay-015-0.png', '2025-04-15 00:04:59', 'Sản phẩm Giày thể thao của Shop đã được kiểm tra trước khi đóng gói và có video quay lại quá trình đóng hàng và gửi hàng cho khách nguyên vẹn, không có lỗi. Khách hàng lưu ý khi nhận hàng thì quay clip lại quá trình kiểm hàng để tránh trường hợp nhận sai hàng hoặc hàng lỗi.', 1000000.00, 800000.00, 1, 'mau-giay-01', 'Uploads/seo_images/mau-giay-019-3c-0.jpg', 'Mẫu Giày 01', 'mô tả seo mẫu giày 01', 'giày, giày đẹp,');
+(8, 14, 'Mẫu Giày 01', '<ol><li>- Giày Adidas Stan Smith x HER Bounty Sneakers giày thể thao nữ trrắng FW2524</li><li>- Hàng Chính Hãng - Cam kết chính hãng 100% nhập từ ADIDAS US, UK, JP - Fake đền x1</li><li>- GIÁ RẺ hơn các shop khác 15-20% - full box, tem, tag, giấy gói chính hãng.</li></ol><p>&nbsp;</p>', 0, 'uploads/products/mau-giay-015-0.png', '2025-04-15 00:04:59', '<p><i><strong>Sản phẩm Giày thể thao của Shop đã được kiểm tra trước khi đóng gói và có video quay lại quá trình đóng hàng và gửi hàng cho khách nguyên vẹn, không có lỗi. Khách hàng lưu ý khi nhận hàng thì quay clip lại quá trình kiểm hàng để tránh trường hợp nhận sai hàng hoặc hàng lỗi.</strong></i></p><ol><li><i><strong>1 bước 1</strong></i></li><li><i><strong>2 bước 2</strong></i></li><li><i><strong>3 bước 3</strong></i></li></ol>', 1000000.00, 800000.00, 1, 'mau-giay-01', 'Uploads/seo_images/mau-giay-019-3c-0.jpg', 'Mẫu Giày 01', 'mô tả seo mẫu giày 01', 'giày, giày đẹp,');
 
 -- --------------------------------------------------------
 
@@ -549,7 +637,22 @@ INSERT INTO `settings` (`id`, `name`, `value`, `updated_at`) VALUES
 (91, 'default_bg_color', '#000000', '2025-04-21 12:16:48'),
 (92, 'default_text_color', '#000000', '2025-04-21 03:49:32'),
 (93, 'default_link_color', '#007bff', '2025-04-21 03:49:32'),
-(94, 'default_opacity', '1', '2025-04-21 03:49:32');
+(94, 'default_opacity', '1', '2025-04-21 03:49:32'),
+(114, 'review_columns_375', '1', '2025-04-23 03:44:43'),
+(115, 'review_columns_425', '1', '2025-04-23 03:44:43'),
+(116, 'review_columns_768', '2', '2025-04-23 03:44:43'),
+(117, 'review_columns_1200', '3', '2025-04-23 03:44:43'),
+(118, 'review_columns_max', '3', '2025-04-23 03:49:32'),
+(169, 'partner_columns_375', '1', '2025-04-23 03:57:21'),
+(170, 'partner_columns_425', '1', '2025-04-23 03:57:21'),
+(171, 'partner_columns_768', '2', '2025-04-23 03:57:21'),
+(172, 'partner_columns_1200', '3', '2025-04-23 03:57:21'),
+(173, 'partner_columns_max', '6', '2025-04-23 04:00:43'),
+(204, 'blog_columns_375', '1', '2025-04-23 09:31:43'),
+(205, 'blog_columns_425', '1', '2025-04-23 09:31:43'),
+(206, 'blog_columns_768', '2', '2025-04-23 09:31:43'),
+(207, 'blog_columns_1200', '4', '2025-04-23 09:31:43'),
+(208, 'blog_columns_max', '4', '2025-04-23 09:33:14');
 
 -- --------------------------------------------------------
 
@@ -595,6 +698,13 @@ ALTER TABLE `admin_logins`
   ADD KEY `admin_id` (`admin_id`);
 
 --
+-- Chỉ mục cho bảng `blogs`
+--
+ALTER TABLE `blogs`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `slug` (`slug`);
+
+--
 -- Chỉ mục cho bảng `categories`
 --
 ALTER TABLE `categories`
@@ -634,6 +744,12 @@ ALTER TABLE `customers`
   ADD UNIQUE KEY `email` (`email`);
 
 --
+-- Chỉ mục cho bảng `customer_reviews`
+--
+ALTER TABLE `customer_reviews`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Chỉ mục cho bảng `logos`
 --
 ALTER TABLE `logos`
@@ -653,6 +769,12 @@ ALTER TABLE `order_details`
   ADD PRIMARY KEY (`id`),
   ADD KEY `order_id` (`order_id`),
   ADD KEY `product_id` (`product_id`);
+
+--
+-- Chỉ mục cho bảng `partners`
+--
+ALTER TABLE `partners`
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Chỉ mục cho bảng `products`
@@ -709,13 +831,19 @@ ALTER TABLE `admins`
 -- AUTO_INCREMENT cho bảng `admin_logins`
 --
 ALTER TABLE `admin_logins`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=42;
+
+--
+-- AUTO_INCREMENT cho bảng `blogs`
+--
+ALTER TABLE `blogs`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT cho bảng `categories`
 --
 ALTER TABLE `categories`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- AUTO_INCREMENT cho bảng `contacts`
@@ -748,6 +876,12 @@ ALTER TABLE `customers`
   MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
+-- AUTO_INCREMENT cho bảng `customer_reviews`
+--
+ALTER TABLE `customer_reviews`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT cho bảng `logos`
 --
 ALTER TABLE `logos`
@@ -766,10 +900,16 @@ ALTER TABLE `order_details`
   MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
 
 --
+-- AUTO_INCREMENT cho bảng `partners`
+--
+ALTER TABLE `partners`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+
+--
 -- AUTO_INCREMENT cho bảng `products`
 --
 ALTER TABLE `products`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
 
 --
 -- AUTO_INCREMENT cho bảng `reviews`
@@ -793,7 +933,7 @@ ALTER TABLE `roles`
 -- AUTO_INCREMENT cho bảng `settings`
 --
 ALTER TABLE `settings`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=114;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=229;
 
 --
 -- AUTO_INCREMENT cho bảng `slides`

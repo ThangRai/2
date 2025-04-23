@@ -105,7 +105,6 @@ try {
         .container {
             max-width: 1200px;
             margin: 40px auto;
-            padding: 0 15px;
         }
         h1 {
             text-align: center;
@@ -492,7 +491,6 @@ try {
         <?php endforeach; ?>
     </div>
 </div>
-<?php require_once 'C:/laragon/www/2/public/includes/footer.php'; ?>
 
 <!-- JavaScript xử lý AJAX và SweetAlert2 -->
 <script>

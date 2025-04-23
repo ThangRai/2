@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <title>CKEditor Demo</title>
+    <script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js"></script>
+    <style>
+      .editor {
+        max-width: 800px;
+        margin: 20px auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="editor">
+      <h3>Soạn thảo văn bản:</h3>
+      <textarea id="editor">
+      đây là key của tôi: <strong>F68XECS73GUFH8FKC21WUCJJR8YGGSKN</strong>
+    </textarea
+      >
+    </div>
+
+    <script>
+      ClassicEditor.create(document.querySelector("#editor")).catch((error) => {
+        console.error(error);
+      });
+    </script>
+  </body>
+</html>

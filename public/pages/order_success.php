@@ -30,7 +30,6 @@ if (!$order_id) {
         .container {
             max-width: 800px;
             margin: 40px auto;
-            padding: 0 15px;
         }
         .success-card {
             background: #fff;

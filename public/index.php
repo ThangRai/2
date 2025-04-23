@@ -197,12 +197,12 @@ try {
         <?php endif; ?>
 
         <!-- Intro Section -->
-        <div class="intro-section">
+        <!-- <div class="intro-section">
             <h2>Chào Mừng Đến Với Thắng Raiy</h2>
             <p>
                 Khám phá các sản phẩm chất lượng cao với giá cả hợp lý. Chúng tôi cam kết mang đến trải nghiệm mua sắm tuyệt vời!
             </p>
-        </div>
+        </div> -->
 
         <?php
         if (file_exists('C:/laragon/www/2/public/pages/product.php')) {
@@ -211,7 +211,35 @@ try {
             echo '<p style="color: red;">Lỗi: Không tìm thấy file product.php</p>';
         }
         ?>
+
+        <?php
+            if (file_exists('C:/laragon/www/2/public/pages/blog.php')) {
+                require_once 'C:/laragon/www/2/public/pages/blog.php';
+            } else {
+                echo '<div class="container"><p style="color: red;">Lỗi: Không tìm thấy file footer.php</p></div>';
+            }
+        ?>
+
+        <?php
+            if (file_exists('C:/laragon/www/2/public/pages/reviews.php')) {
+                require_once 'C:/laragon/www/2/public/pages/reviews.php';
+            } else {
+                echo '<div class="container"><p style="color: red;">Lỗi: Không tìm thấy file footer.php</p></div>';
+            }
+        ?>
+
+
+
+        <?php
+            if (file_exists('C:/laragon/www/2/public/pages/doitac.php')) {
+                require_once 'C:/laragon/www/2/public/pages/doitac.php';
+            } else {
+                echo '<div class="container"><p style="color: red;">Lỗi: Không tìm thấy file footer.php</p></div>';
+            }
+        ?>
     </div>
+
+
 
     <?php
     if (file_exists('C:/laragon/www/2/public/includes/footer.php')) {

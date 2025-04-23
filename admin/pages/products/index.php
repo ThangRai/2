@@ -152,8 +152,9 @@ $categories = $pdo->query("SELECT * FROM categories")->fetchAll(PDO::FETCH_ASSOC
                             <td><?php echo htmlspecialchars($product['name']); ?></td>
                             <td><?php echo number_format($product['original_price'], 0, ',', '.') . ' ₫'; ?></td>
                             <td><?php echo number_format($product['current_price'], 0, ',', '.') . ' ₫'; ?></td>
-                            <td><?php echo htmlspecialchars(substr($product['description'] ?? '', 0, 50)) . (strlen($product['description'] ?? '') > 50 ? '...' : ''); ?></td>
-                            <td><?php echo htmlspecialchars(substr($product['content'] ?? '', 0, 50)) . (strlen($product['content'] ?? '') > 50 ? '...' : ''); ?></td>
+                            <td><?php echo htmlspecialchars(substr(strip_tags($product['description'] ?? ''), 0, 50)) . (strlen(strip_tags($product['description'] ?? '')) > 50 ? '...' : ''); ?></td>
+                            <td><?php echo htmlspecialchars(substr(strip_tags($product['content'] ?? ''), 0, 50)) . (strlen(strip_tags($product['content'] ?? '')) > 50 ? '...' : ''); ?></td>
+                            <td>
                             <td>
                                 <?php if (!empty($product['image'])): ?>
                                     <img src="/2/admin/<?php echo htmlspecialchars($product['image']); ?>" alt="Hình ảnh sản phẩm" style="width: 50px; height: 50px; object-fit: cover;">

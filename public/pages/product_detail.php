@@ -5,6 +5,14 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 session_start();
 
+// Tích hợp HTMLPurifier
+require_once 'C:/laragon/www/2/admin/vendor/htmlpurifier/library/HTMLPurifier.auto.php';
+$htmlPurifierConfig = HTMLPurifier_Config::createDefault();
+$htmlPurifierConfig->set('HTML.Allowed', 'p,br,b,i,u,strike,ul,ol,li,table,thead,tbody,tr,th,td,blockquote,a[href],img[src|alt],strong,em,iframe[src|width|height|frameborder|allow|allowfullscreen]');
+$htmlPurifierConfig->set('HTML.SafeIframe', true);
+$htmlPurifierConfig->set('URI.SafeIframeRegexp', '%^(https?:)?//(www\.youtube\.com/embed/|player\.vimeo\.com/video/)%');
+$purifier = new HTMLPurifier($htmlPurifierConfig);
+
 try {
     require_once 'C:/laragon/www/2/admin/config/db_connect.php';
     
@@ -114,29 +122,28 @@ try {
         exit;
     }
 
-// Lấy đánh giá đã duyệt
-$stmt = $pdo->prepare("SELECT DISTINCT id, customer_name, rating, comment, created_at FROM reviews WHERE product_id = ? AND is_approved = 1 ORDER BY created_at DESC");
-$stmt->execute([$product['id']]);
-$reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    // Lấy đánh giá đã duyệt
+    $stmt = $pdo->prepare("SELECT DISTINCT id, customer_name, rating, comment, created_at FROM reviews WHERE product_id = ? AND is_approved = 1 ORDER BY created_at DESC");
+    $stmt->execute([$product['id']]);
+    $reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Lấy phản hồi cho từng đánh giá
-foreach ($reviews as $key => $review) {
-    $stmt = $pdo->prepare("SELECT reply_by, reply_content, created_at FROM review_replies WHERE review_id = ? ORDER BY created_at ASC");
-    $stmt->execute([$review['id']]);
-    $reviews[$key]['replies'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
-
-// Lọc đánh giá trùng lặp (nếu cần)
-$filtered_reviews = [];
-$seen_ids = [];
-foreach ($reviews as $review) {
-    if (!in_array($review['id'], $seen_ids)) {
-        $filtered_reviews[] = $review;
-        $seen_ids[] = $review['id'];
+    // Lấy phản hồi cho từng đánh giá
+    foreach ($reviews as $key => $review) {
+        $stmt = $pdo->prepare("SELECT reply_by, reply_content, created_at FROM review_replies WHERE review_id = ? ORDER BY created_at ASC");
+        $stmt->execute([$review['id']]);
+        $reviews[$key]['replies'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-}
-$reviews = $filtered_reviews;
 
+    // Lọc đánh giá trùng lặp (nếu cần)
+    $filtered_reviews = [];
+    $seen_ids = [];
+    foreach ($reviews as $review) {
+        if (!in_array($review['id'], $seen_ids)) {
+            $filtered_reviews[] = $review;
+            $seen_ids[] = $review['id'];
+        }
+    }
+    $reviews = $filtered_reviews;
 
     // Lấy sản phẩm liên quan (ngẫu nhiên)
     $stmt = $pdo->prepare("SELECT id, slug, name, image, current_price FROM products WHERE is_active = 1 AND id != ? ORDER BY RAND() LIMIT 4");
@@ -160,7 +167,7 @@ $reviews = $filtered_reviews;
     <meta name="keywords" content="<?php echo htmlspecialchars($product['seo_keywords'], ENT_QUOTES); ?>">
     <meta name="title" content="<?php echo htmlspecialchars($product['seo_title'] ?: $product['name'], ENT_QUOTES); ?>">
     <meta property="og:image" content="<?php echo $product['seo_image'] ? 'http://localhost/2/admin/' . htmlspecialchars($product['seo_image'], ENT_QUOTES) : ($product['image'] ? 'http://localhost/2/admin/' . htmlspecialchars($product['image'], ENT_QUOTES) : 'http://localhost/2/admin/uploads/products/default.jpg'); ?>">
-    <title><?php echo htmlspecialchars($product['seo_title'] ?: $product['name'], ENT_QUOTES); ?> - Website</title>    <title><?php echo htmlspecialchars($product['name'], ENT_QUOTES); ?> - Website</title>
+    <title><?php echo htmlspecialchars($product['seo_title'] ?: $product['name'], ENT_QUOTES); ?> - Website</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -176,7 +183,6 @@ $reviews = $filtered_reviews;
         .container {
             max-width: 1200px;
             margin: 50px auto;
-            padding: 0 15px;
         }
         h1 {
             font-size: 34px;
@@ -259,13 +265,13 @@ $reviews = $filtered_reviews;
         .stock-status.out {
             color: #ff4757;
         }
-        .product-description, .product-detailed-description {
+        .product-description, .product-detailed-description, .product-content {
             font-size: 16px;
             color: #636e72;
             line-height: 1.8;
             margin-bottom: 20px;
         }
-        .product-description h3, .product-detailed-description h3 {
+        .product-description h3, .product-detailed-description h3, .product-content h3 {
             font-size: 22px;
             color: #2d3436;
             margin-bottom: 15px;
@@ -740,12 +746,12 @@ $reviews = $filtered_reviews;
                     </div>
                     <div class="product-description">
                         <h3>Mô tả</h3>
-                        <?php echo htmlspecialchars($product['description'], ENT_QUOTES); ?>
+                        <?php echo $purifier->purify($product['description']); ?>
                     </div>
                     <?php if ($hasDetailedDescription && !empty($product['detailed_description'])): ?>
                         <div class="product-detailed-description">
                             <h3>Chi tiết</h3>
-                            <?php echo nl2br(htmlspecialchars($product['detailed_description'], ENT_QUOTES)); ?>
+                            <?php echo $purifier->purify($product['detailed_description']); ?>
                         </div>
                     <?php endif; ?>
                     <form class="add-to-cart-form" method="POST" action="/2/public/pages/<?php echo htmlspecialchars($product['slug'], ENT_QUOTES); ?>">
@@ -761,7 +767,7 @@ $reviews = $filtered_reviews;
         <div class="product-content">
             <h3>Thông tin sản phẩm</h3>
             <div class="product-content">
-                <?php echo nl2br(htmlspecialchars($product['content'], ENT_QUOTES)); ?>
+                <?php echo $purifier->purify($product['content']); ?>
             </div>
         </div>
         <div class="reviews-section">
@@ -789,7 +795,7 @@ $reviews = $filtered_reviews;
                                     <div class="reply-item">
                                         <div class="reply-by"><?php echo htmlspecialchars($reply['reply_by'], ENT_QUOTES); ?></div>
                                         <div class="reply-content"><?php echo htmlspecialchars($reply['reply_content'], ENT_QUOTES); ?></div>
-                                        <div class="reply-date"><?php echo date('d/m/Y H:i', strtotime($review['created_at'])); ?></div>
+                                        <div class="reply-date"><?php echo date('d/m/Y H:i', strtotime($reply['created_at'])); ?></div>
                                     </div>
                                 <?php endforeach; ?>
                             </div>

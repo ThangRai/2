@@ -65,7 +65,7 @@ function createSlug($string, $pdo) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = trim($_POST['name'] ?? '');
     $category_id = (int)($_POST['category_id'] ?? 0);
-    $content = trim($_POST['content'] ?? '');
+    $content = trim($_POST['noidung'] ?? ''); // Lấy từ noidung thay vì content
     $description = trim($_POST['description'] ?? '');
     $original_price = (float)($_POST['original_price'] ?? 0);
     $current_price = (float)($_POST['current_price'] ?? 0);
@@ -114,7 +114,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Xử lý ảnh sản phẩm
             $image = null;
             if (!empty($_FILES['image']['name'])) {
-                $target_dir = "Uploads/products/";
+                $target_dir = "uploads/products/";
                 if (!is_dir($target_dir)) {
                     mkdir($target_dir, 0755, true);
                 }
@@ -127,7 +127,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Xử lý ảnh đại diện SEO
             $seo_image = null;
             if (!empty($_FILES['seo_image']['name'])) {
-                $target_dir = "Uploads/seo_images/";
+                $target_dir = "uploads/seo_images/";
                 if (!is_dir($target_dir)) {
                     mkdir($target_dir, 0755, true);
                 }
@@ -164,9 +164,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Thêm sản phẩm</title>
-    <!-- Bootstrap CSS -->
+    <!-- SB Admin CSS -->
+    <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="css/sb-admin-2.min.css" rel="stylesheet">
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- CKEditor 5 -->
+    <script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js"></script>
     <style>
         .card {
             border-radius: 8px;
@@ -187,27 +191,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 font-size: 0.9em;
             }
         }
+        /* Đảm bảo CKEditor hiển thị tốt trong SB Admin */
+        .ck-editor__editable {
+            min-height: 200px;
+        }
     </style>
 </head>
 <body>
-    <!-- Header (giả sử có file header.php) -->
-    <?php // require_once 'C:/laragon/www/2/admin/includes/header.php'; ?>
-
-    <!-- Hiển thị thông báo SweetAlert2 -->
-    <?php if (isset($_SESSION['message'])): ?>
-        <script>
-            Swal.fire({
-                icon: '<?php echo $_SESSION['message']['type']; ?>',
-                title: '<?php echo $_SESSION['message']['type'] === 'success' ? 'Thành công' : 'Lỗi'; ?>',
-                html: '<?php echo htmlspecialchars($_SESSION['message']['text']); ?>',
-                confirmButtonText: 'OK'
-            });
-        </script>
-        <?php unset($_SESSION['message']); ?>
-    <?php endif; ?>
+        <!-- Hiển thị thông báo SweetAlert2 -->
+        <?php if (isset($_SESSION['message'])): ?>
+            <script>
+                Swal.fire({
+                    icon: '<?php echo $_SESSION['message']['type']; ?>',
+                    title: '<?php echo $_SESSION['message']['type'] === 'success' ? 'Thành công' : 'Lỗi'; ?>',
+                    html: '<?php echo htmlspecialchars($_SESSION['message']['text']); ?>',
+                    confirmButtonText: 'OK'
+                });
+            </script>
+            <?php unset($_SESSION['message']); ?>
+        <?php endif; ?>
 
         <div class="d-sm-flex align-items-center justify-content-between mb-4">
             <h1 class="h3 mb-0 text-gray-800">Thêm sản phẩm</h1>
+            <a href="?page=products" class="btn btn-secondary">Hủy</a>
         </div>
 
         <div class="card shadow mb-4">
@@ -216,64 +222,71 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
             <div class="card-body">
                 <form method="POST" enctype="multipart/form-data">
-                    <div class="form-group">
-                        <label for="name">Tên sản phẩm <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="name" name="name" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="category_id">Danh mục <span class="text-danger">*</span></label>
-                        <select class="form-control" id="category_id" name="category_id" required>
-                            <option value="">Chọn danh mục</option>
-                            <?php foreach ($categories as $category): ?>
-                                <option value="<?php echo $category['id']; ?>"><?php echo htmlspecialchars($category['name']); ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="content">Nội dung</label>
-                        <textarea class="form-control" id="content" name="content" rows="4"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="description">Mô tả</label>
-                        <textarea class="form-control" id="description" name="description" rows="4"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="image">Hình ảnh</label>
-                        <input type="file" class="form-control-file" id="image" name="image" accept="image/jpeg,image/png">
-                    </div>
-                    <div class="form-group">
-                        <label for="original_price">Giá gốc <span class="text-danger">*</span></label>
-                        <input type="number" step="0.01" class="form-control" id="original_price" name="original_price" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="current_price">Giá hiện tại <span class="text-danger">*</span></label>
-                        <input type="number" step="0.01" class="form-control" id="current_price" name="current_price" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="stock">Số lượng tồn kho <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control" id="stock" name="stock" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="is_active">Trạng thái</label>
-                        <input type="checkbox" id="is_active" name="is_active" checked>
-                        <label for="is_active">Kích hoạt</label>
-                    </div>
-                    <!-- Các trường SEO -->
-                    <div class="form-group">
-                        <label for="seo_image">Ảnh đại diện SEO</label>
-                        <input type="file" class="form-control-file" id="seo_image" name="seo_image" accept="image/jpeg,image/png">
-                    </div>
-                    <div class="form-group">
-                        <label for="seo_title">Tiêu đề SEO (tối đa 255 ký tự)</label>
-                        <input type="text" class="form-control" id="seo_title" name="seo_title" maxlength="255">
-                    </div>
-                    <div class="form-group">
-                        <label for="seo_description">Mô tả SEO (tối đa 160 ký tự)</label>
-                        <textarea class="form-control" id="seo_description" name="seo_description" rows="3" maxlength="160"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="seo_keywords">Từ khóa SEO (phân cách bằng dấu phẩy)</label>
-                        <input type="text" class="form-control" id="seo_keywords" name="seo_keywords">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="name">Tên sản phẩm <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="name" name="name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="category_id">Danh mục <span class="text-danger">*</span></label>
+                                <select class="form-control" id="category_id" name="category_id" required>
+                                    <option value="">Chọn danh mục</option>
+                                    <?php foreach ($categories as $category): ?>
+                                        <option value="<?php echo $category['id']; ?>"><?php echo htmlspecialchars($category['name']); ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="description">Mô tả</label>
+                                <textarea class="form-control" id="description" name="description" rows="4"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="noidung">Nội dung</label>
+                                <textarea class="form-control" id="noidung" name="noidung" rows="4"></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="image">Hình ảnh</label>
+                                <input type="file" class="form-control-file" id="image" name="image" accept="image/jpeg,image/png">
+                            </div>
+                            <div class="form-group">
+                                <label for="original_price">Giá gốc <span class="text-danger">*</span></label>
+                                <input type="number" step="0.01" class="form-control" id="original_price" name="original_price" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="current_price">Giá hiện tại <span class="text-danger">*</span></label>
+                                <input type="number" step="0.01" class="form-control" id="current_price" name="current_price" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="stock">Số lượng tồn kho <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="stock" name="stock" required>
+                            </div>
+                            <div class="form-group">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="is_active" name="is_active" checked>
+                                    <label class="form-check-label" for="is_active">Kích hoạt</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="seo_image">Ảnh đại diện SEO</label>
+                                <input type="file" class="form-control-file" id="seo_image" name="seo_image" accept="image/jpeg,image/png">
+                            </div>
+                            <div class="form-group">
+                                <label for="seo_title">Tiêu đề SEO (tối đa 255 ký tự)</label>
+                                <input type="text" class="form-control" id="seo_title" name="seo_title" maxlength="255">
+                            </div>
+                            <div class="form-group">
+                                <label for="seo_description">Mô tả SEO (tối đa 160 ký tự)</label>
+                                <textarea class="form-control" id="seo_description" name="seo_description" rows="3" maxlength="160"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="seo_keywords">Từ khóa SEO (phân cách bằng dấu phẩy)</label>
+                                <input type="text" class="form-control" id="seo_keywords" name="seo_keywords">
+                            </div>
+                        </div>
                     </div>
                     <button type="submit" class="btn btn-primary">Lưu</button>
                     <a href="?page=products" class="btn btn-secondary">Hủy</a>
@@ -281,10 +294,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         </div>
 
-    <!-- Footer (giả sử có file footer.php) -->
-    <?php // require_once 'C:/laragon/www/2/admin/includes/footer.php'; ?>
-
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <!-- Scripts -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="js/sb-admin-2.min.js"></script>
+    <script src="/2/admin/assets/js/ckeditor_config.js"></script>
 </body>
 </html>
