@@ -25,11 +25,21 @@ if ($admin_id) {
 }
 ?>
 
+
+
 <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
     <!-- Nút toggle sidebar cho mobile -->
-    <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+    <button id="sidebarToggleTop" class="btn btn-link rounded-circle mr-3">
         <i class="fa fa-bars"></i>
     </button>
+
+    <!-- Thời gian đếm giờ -->
+<div class="clock-box d-flex align-items-center px-3 py-1 shadow-sm mr-3" id="countdown-box" data-tooltip="">
+    <i class="fas fa-fire mr-2 text-danger"></i>
+    <span id="countdown" class="font-monospace text-dark">00:00:00</span>
+</div>
+
+
 
     <!-- Ô tìm kiếm -->
     <form class="container search-container">
@@ -46,6 +56,15 @@ if ($admin_id) {
             <i class="fas fa-search"></i>
         </button>
     </form>
+
+<div class="ml-3 d-none d-md-flex align-items-center" id="clock-container">
+    <div class="clock-box d-flex align-items-center px-3 py-1 shadow-sm">
+        <i class="fas fa-clock mr-2 text-primary"></i>
+        <span id="clock" class="font-monospace text-dark"></span>
+    </div>
+</div>
+
+
 
     <!-- Phần phải navbar -->
     <ul class="navbar-nav ml-auto">
@@ -115,6 +134,91 @@ if ($admin_id) {
 </nav>
 
 <style>
+    form.container.search-container {
+    max-width: 40%;
+}
+#countdown-box {
+    background: linear-gradient(145deg, #ffffff, #f0f0f0);
+    border-radius: 30px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #333;
+    border: 1px solid #e3e6f0;
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+}
+#countdown-box:hover {
+    background: #e9ecef;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+}
+#countdown {
+    font-family: 'Courier New', monospace;
+    letter-spacing: 1px;
+}
+/* Tooltip */
+#countdown-box:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    top: 100%;
+    left: 70%;
+    transform: translateX(-50%);
+    background: #333;
+    color: #fff;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    z-index: 1000;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+#countdown-box::after {
+    opacity: 0;
+}
+#countdown-box:hover::before {
+    content: '';
+    position: absolute;
+    top: calc(100% - 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-bottom-color: #333;
+    z-index: 1000;
+}
+@media (max-width: 767.98px) {
+    #countdown-box {
+        display: none !important;
+    }
+}
+
+#clock-container .clock-box {
+    background: linear-gradient(145deg, #ffffff, #f0f0f0);
+    border-radius: 30px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #333;
+    border: 1px solid #e3e6f0;
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
+#clock-container .clock-box:hover {
+    background: #e9ecef;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+}
+
+#clock {
+    font-family: 'Courier New', monospace;
+    letter-spacing: 1px;
+}
+
+/* Ẩn trên mobile */
+@media (max-width: 767.98px) {
+    #clock-container {
+        display: none !important;
+    }
+}
+
+
 /* CSS cho ô tìm kiếm trên mobile */
 @media (max-width: 767.98px) {
     .search-container {
@@ -168,4 +272,42 @@ document.getElementById('search-icon-mobile').addEventListener('click', function
     const searchInputGroup = document.querySelector('.search-input-group');
     searchInputGroup.classList.toggle('active');
 });
+</script>
+<script>
+let startTime = localStorage.getItem('startTime');
+if (!startTime) {
+    startTime = Date.now();
+    localStorage.setItem('startTime', startTime);
+}
+let countdownElement = document.getElementById('countdown');
+let countdownBox = document.getElementById('countdown-box');
+function updateCountdown() {
+    const elapsed = Date.now() - startTime;
+    const hours = Math.floor(elapsed / 3600000);
+    const minutes = Math.floor((elapsed % 3600000) / 60000);
+    const seconds = Math.floor((elapsed % 60000) / 1000);
+    countdownElement.textContent = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    countdownBox.setAttribute('data-tooltip', `Thời gian hoạt động của bạn là ${hours} giờ ${minutes} phút ${seconds} giây`);
+}
+setInterval(updateCountdown, 1000);
+updateCountdown();
+
+// Cập nhật đồng hồ hiện tại (giờ, phút, giây)
+function updateClock() {
+    const now = new Date();
+    
+    // Lấy tên ngày (thứ)
+    const daysOfWeek = ["Chủ nhật", "Thứ hai", "Thứ ba", "Thứ tư", "Thứ năm", "Thứ sáu", "Thứ bảy"];
+    const dayName = daysOfWeek[now.getDay()];
+
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    
+    // Hiển thị ngày + giờ
+    document.getElementById('clock').textContent = `${dayName} ${hours}:${minutes}:${seconds}`;
+}
+setInterval(updateClock, 1000);
+updateClock(); // chạy ngay lần đầu
+
 </script>

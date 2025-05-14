@@ -9,19 +9,6 @@ if (!isset($_SESSION['admin_id'])) {
     exit;
 }
 
-// Kiểm tra quyền truy cập
-$stmt = $pdo->prepare("SELECT role_id FROM admins WHERE id = ?");
-$stmt->execute([$_SESSION['admin_id']]);
-$admin = $stmt->fetch(PDO::FETCH_ASSOC);
-
-$allowed_roles = [1, 2]; // super_admin (1), staff (2)
-if (!$admin || !in_array($admin['role_id'], $allowed_roles)) {
-    error_log('Access denied for admin_id: ' . ($_SESSION['admin_id'] ?? 'unknown') . ', role_id: ' . ($admin['role_id'] ?? 'none'));
-    $_SESSION['message'] = ['type' => 'error', 'text' => 'Bạn không có quyền truy cập trang này.'];
-    echo '<script>window.location.href="index.php?page=dashboard";</script>';
-    exit;
-}
-
 // Debug session
 error_log('Session data: ' . print_r($_SESSION, true));
 
@@ -156,6 +143,9 @@ $statuses = ['pending' => 'Đang chờ', 'processing' => 'Đang xử lý', 'ship
                                 <a href="?page=orders&subpage=update&id=<?php echo $order['id']; ?>" class="btn btn-warning btn-sm" title="Cập nhật">
                                     <i class="fas fa-edit"></i>
                                 </a>
+                                <button class="btn btn-success btn-sm send-email" data-id="<?php echo $order['id']; ?>" title="Gửi mail">
+                                    <i class="fas fa-envelope"></i>
+                                </button>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -188,13 +178,15 @@ $statuses = ['pending' => 'Đang chờ', 'processing' => 'Đang xử lý', 'ship
     </div>
 </div>
 
-<!-- AJAX cho thay đổi trạng thái -->
+<!-- AJAX cho thay đổi trạng thái và gửi mail -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
 $(document).ready(function() {
     console.log('jQuery loaded:', typeof $);
     console.log('Status selects found:', $('.status-select').length);
+    console.log('Send email buttons found:', $('.send-email').length);
 
+    // Cập nhật trạng thái
     $('.status-select').on('change', function() {
         var select = $(this);
         var orderId = select.data('id');
@@ -242,6 +234,50 @@ $(document).ready(function() {
         });
 
         select.data('original-status', newStatus); // Lưu trạng thái hiện tại
+    });
+
+    // Gửi email
+    $('.send-email').on('click', function() {
+        var button = $(this);
+        var orderId = button.data('id');
+
+        console.log('Send email: ID =', orderId);
+
+        Swal.fire({
+            title: 'Xác nhận',
+            text: 'Bạn có chắc muốn gửi email thông báo cho khách hàng?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Gửi',
+            cancelButtonText: 'Hủy'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: '/2/admin/pages/orders/send_email.php',
+                    type: 'POST',
+                    data: { id: orderId },
+                    dataType: 'json',
+                    success: function(result) {
+                        console.log('AJAX response:', result);
+                        Swal.fire({
+                            icon: result.success ? 'success' : 'error',
+                            title: result.success ? 'Thành công' : 'Lỗi',
+                            text: result.message,
+                            confirmButtonText: 'OK'
+                        });
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('AJAX error:', status, error, 'Response:', xhr.responseText);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Lỗi',
+                            text: 'Không thể gửi email',
+                            confirmButtonText: 'OK'
+                        });
+                    }
+                });
+            }
+        });
     });
 
     // Lưu trạng thái ban đầu

@@ -9,12 +9,14 @@ if (!isset($_SESSION['admin_id'])) {
     exit;
 }
 
+
+
 // Kiểm tra quyền truy cập
 $stmt = $pdo->prepare("SELECT role_id FROM admins WHERE id = ?");
 $stmt->execute([$_SESSION['admin_id']]);
 $admin = $stmt->fetch(PDO::FETCH_ASSOC);
 
-$allowed_roles = [1, 3]; // super_admin (1), content_manager (3)
+$allowed_roles = [1, 2, 3, 4]; // super_admin (1), content_manager (3)
 if (!$admin || !in_array($admin['role_id'], $allowed_roles)) {
     error_log('Access denied for admin_id: ' . ($_SESSION['admin_id'] ?? 'unknown') . ', role_id: ' . ($admin['role_id'] ?? 'none'));
     $_SESSION['message'] = ['type' => 'error', 'text' => 'Bạn không có quyền truy cập trang này.'];
@@ -37,7 +39,10 @@ $status = isset($_GET['status']) ? $_GET['status'] : '';
 
 $where = [];
 $params = [];
-$sql = "SELECT p.* FROM products p WHERE 1=1";
+$sql = "SELECT p.*, fs.sale_price, fs.start_time, fs.end_time, fs.is_active AS flash_sale_active 
+        FROM products p 
+        LEFT JOIN flash_sales fs ON p.id = fs.product_id 
+        WHERE 1=1";
 
 if ($search) {
     $where[] = "p.name LIKE ?";
@@ -62,6 +67,17 @@ $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+// Lấy thuộc tính sản phẩm
+$product_attributes = [];
+foreach ($products as $product) {
+    $stmt = $pdo->prepare("SELECT pa.name, av.value 
+                           FROM attribute_values av 
+                           JOIN product_attributes pa ON av.attribute_id = pa.id 
+                           WHERE av.product_id = ?");
+    $stmt->execute([$product['id']]);
+    $product_attributes[$product['id']] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
 // Tổng số sản phẩm
 $count_sql = "SELECT COUNT(*) FROM products p WHERE 1=1";
 if ($where) {
@@ -72,8 +88,9 @@ $count_stmt->execute($params);
 $total_products = $count_stmt->fetchColumn();
 $total_pages = ceil($total_products / $limit);
 
-// Lấy danh mục cho bộ lọc
+// Lấy danh mục và thuộc tính cho bộ lọc
 $categories = $pdo->query("SELECT * FROM categories")->fetchAll(PDO::FETCH_ASSOC);
+$attributes = $pdo->query("SELECT * FROM product_attributes")->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <?php if (isset($_SESSION['message'])): ?>
@@ -90,7 +107,10 @@ $categories = $pdo->query("SELECT * FROM categories")->fetchAll(PDO::FETCH_ASSOC
 
 <div class="d-sm-flex align-items-center justify-content-between mb-4">
     <h1 class="h3 mb-0 text-gray-800">Sản phẩm</h1>
-    <a href="?page=products&subpage=add" class="btn btn-primary btn-sm">Thêm sản phẩm</a>
+    <div>
+        <a href="?page=products&subpage=add" class="btn btn-primary btn-sm">Thêm sản phẩm</a>
+        <a href="?page=attributes" class="btn btn-info btn-sm">Quản lý thuộc tính</a>
+    </div>
 </div>
 
 <div class="card shadow mb-4">
@@ -136,6 +156,8 @@ $categories = $pdo->query("SELECT * FROM categories")->fetchAll(PDO::FETCH_ASSOC
                         <th>Tên</th>
                         <th>Giá gốc</th>
                         <th>Giá hiện tại</th>
+                        <th>Flash Sale</th>
+                        <th>Thuộc tính</th>
                         <th>Mô tả</th>
                         <th>Nội dung</th>
                         <th>Hình ảnh</th>
@@ -152,9 +174,29 @@ $categories = $pdo->query("SELECT * FROM categories")->fetchAll(PDO::FETCH_ASSOC
                             <td><?php echo htmlspecialchars($product['name']); ?></td>
                             <td><?php echo number_format($product['original_price'], 0, ',', '.') . ' ₫'; ?></td>
                             <td><?php echo number_format($product['current_price'], 0, ',', '.') . ' ₫'; ?></td>
+                            <td>
+                                <?php if ($product['sale_price'] && $product['flash_sale_active'] && strtotime($product['end_time']) > time()): ?>
+                                    <span class="text-danger">
+                                        Giá: <?php echo number_format($product['sale_price'], 0, ',', '.') . ' ₫'; ?><br>
+                                        Kết thúc: <?php echo date('d/m/Y H:i', strtotime($product['end_time'])); ?>
+                                    </span>
+                                <?php else: ?>
+                                    <a href="?page=flash_sales&subpage=add&product_id=<?php echo $product['id']; ?>" class="btn btn-sm btn-outline-danger">Thêm Flash Sale</a>
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <?php
+                                if (isset($product_attributes[$product['id']]) && count($product_attributes[$product['id']]) > 0) {
+                                    foreach ($product_attributes[$product['id']] as $attr) {
+                                        echo htmlspecialchars($attr['name']) . ': ' . htmlspecialchars($attr['value']) . '<br>';
+                                    }
+                                } else {
+                                    echo 'Không có thuộc tính';
+                                }
+                                ?>
+                            </td>
                             <td><?php echo htmlspecialchars(substr(strip_tags($product['description'] ?? ''), 0, 50)) . (strlen(strip_tags($product['description'] ?? '')) > 50 ? '...' : ''); ?></td>
                             <td><?php echo htmlspecialchars(substr(strip_tags($product['content'] ?? ''), 0, 50)) . (strlen(strip_tags($product['content'] ?? '')) > 50 ? '...' : ''); ?></td>
-                            <td>
                             <td>
                                 <?php if (!empty($product['image'])): ?>
                                     <img src="/2/admin/<?php echo htmlspecialchars($product['image']); ?>" alt="Hình ảnh sản phẩm" style="width: 50px; height: 50px; object-fit: cover;">

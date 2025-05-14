@@ -4,6 +4,7 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
+
 try {
     require_once 'C:/laragon/www/2/admin/config/db_connect.php';
     // Kiểm tra trạng thái website
@@ -205,6 +206,14 @@ try {
         </div> -->
 
         <?php
+        if (file_exists('C:/laragon/www/2/public/pages/info.php')) {
+            require_once 'C:/laragon/www/2/public/pages/info.php';
+        } else {
+            echo '<p style="color: red;">Lỗi: Không tìm thấy file info.php</p>';
+        }
+        ?>
+
+        <?php
         if (file_exists('C:/laragon/www/2/public/pages/product.php')) {
             require_once 'C:/laragon/www/2/public/pages/product.php';
         } else {
@@ -228,7 +237,13 @@ try {
             }
         ?>
 
-
+        <?php
+            if (file_exists('C:/laragon/www/2/public/pages/question.php')) {
+                require_once 'C:/laragon/www/2/public/pages/question.php';
+            } else {
+                echo '<div class="container"><p style="color: red;">Lỗi: Không tìm thấy file footer.php</p></div>';
+            }
+        ?>
 
         <?php
             if (file_exists('C:/laragon/www/2/public/pages/doitac.php')) {

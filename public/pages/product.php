@@ -20,25 +20,37 @@ try {
         $columns[$row['name']] = min((int)$row['value'], 6);
     }
 
-    // Lấy sản phẩm
-    $stmt = $pdo->prepare("SELECT id, slug, name, image, description, stock, original_price, current_price FROM products WHERE is_active = 1 ORDER BY created_at DESC");
+    // Lấy sản phẩm và Flash Sale
+    $stmt = $pdo->prepare("SELECT p.id, p.slug, p.name, p.image, p.description, p.stock, p.original_price, p.current_price, 
+                           fs.sale_price, fs.start_time, fs.end_time, fs.is_active AS flash_sale_active 
+                           FROM products p 
+                           LEFT JOIN flash_sales fs ON p.id = fs.product_id 
+                           WHERE p.is_active = 1 
+                           ORDER BY p.created_at DESC");
     $stmt->execute();
     $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // Xử lý thêm vào giỏ hàng
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
-        header('Content-Type: application/json'); // Thiết lập header JSON
+        header('Content-Type: application/json');
         $product_id = (int)$_POST['product_id'];
         $quantity = (int)$_POST['quantity'];
 
         error_log("POST received: product_id=$product_id, quantity=$quantity");
 
-        // Kiểm tra stock
-        $stmt = $pdo->prepare("SELECT id, name, current_price, stock, image FROM products WHERE id = ? AND is_active = 1");
+        // Kiểm tra stock và Flash Sale
+        $stmt = $pdo->prepare("SELECT p.id, p.name, p.current_price, p.stock, p.image, 
+                               fs.sale_price, fs.start_time, fs.end_time, fs.is_active AS flash_sale_active 
+                               FROM products p 
+                               LEFT JOIN flash_sales fs ON p.id = fs.product_id 
+                               WHERE p.id = ? AND p.is_active = 1");
         $stmt->execute([$product_id]);
         $product = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($product && $product['stock'] >= $quantity && $quantity > 0) {
+            $is_flash_sale_active = $product['flash_sale_active'] && 
+                                    strtotime($product['start_time']) <= time() && 
+                                    strtotime($product['end_time']) >= time();
             if (!isset($_SESSION['cart'])) {
                 $_SESSION['cart'] = [];
             }
@@ -51,7 +63,7 @@ try {
                 } else {
                     $_SESSION['cart'][$product_id] = [
                         'name' => $product['name'],
-                        'price' => $product['current_price'],
+                        'price' => $is_flash_sale_active ? $product['sale_price'] : $product['current_price'],
                         'quantity' => $quantity,
                         'stock' => $product['stock'],
                         'image' => $product['image']
@@ -71,7 +83,7 @@ try {
 } catch (Exception $e) {
     error_log('Product page error: ' . $e->getMessage());
     header('Content-Type: application/json');
-    echo json_encode(['success' => false, 'message' => 'Lỗi hệ thống: ' . $e->getMessage()]);
+    echo json_encode(['success' => false, 'message' => 'Lỗi hệ thống']);
     $products = [];
     $columns = [
         'columns_375' => 2,
@@ -92,9 +104,7 @@ try {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <!-- Thêm SweetAlert2 CDN -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <!-- Thêm jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
         body {
@@ -229,6 +239,13 @@ try {
             font-size: 14px;
             font-weight: 600;
         }
+        .flash-sale-price {
+            color: #ff4757;
+            font-size: 1.1em;
+            font-weight: 600;
+            display: block;
+            margin-bottom: 5px;
+        }
         .stock-status {
             font-size: 0.9em;
             margin: 6px 0;
@@ -359,7 +376,7 @@ try {
                 font-size: 1.1em;
                 height: 44px;
             }
-            .current-price {
+            .current-price, .flash-sale-price {
                 font-size: 1.3em;
             }
             .add-to-cart-form input[type="number"] {
@@ -385,7 +402,7 @@ try {
                 font-size: 1em;
                 height: 40px;
             }
-            .current-price {
+            .current-price, .flash-sale-price {
                 font-size: 1.2em;
             }
             .add-to-cart-form input[type="number"] {
@@ -411,7 +428,7 @@ try {
                 font-size: 0.95em;
                 height: auto;
             }
-            .current-price {
+            .current-price, .flash-sale-price {
                 font-size: 14px;
             }
             .add-to-cart-form input[type="number"] {
@@ -444,9 +461,14 @@ try {
     <div class="product-grid">
         <?php foreach ($products as $product): ?>
             <?php
-            $discount = $product['original_price'] > $product['current_price'] && $product['original_price'] > 0
-                ? round(($product['original_price'] - $product['current_price']) / $product['original_price'] * 100)
-                : 0;
+            $is_flash_sale_active = $product['flash_sale_active'] && 
+                                    strtotime($product['start_time']) <= time() && 
+                                    strtotime($product['end_time']) >= time();
+            $discount = $is_flash_sale_active && $product['original_price'] > $product['sale_price']
+                ? round(($product['original_price'] - $product['sale_price']) / $product['original_price'] * 100)
+                : ($product['original_price'] > $product['current_price']
+                    ? round(($product['original_price'] - $product['current_price']) / $product['original_price'] * 100)
+                    : 0);
             ?>
             <div class="product-card">
                 <a href="/2/public/pages/<?php echo htmlspecialchars($product['slug'], ENT_QUOTES); ?>" class="product-link"></a>
@@ -464,6 +486,9 @@ try {
                 <div class="product-info">
                     <h5><?php echo htmlspecialchars($product['name'], ENT_QUOTES); ?></h5>
                     <div class="product-price">
+                        <?php if ($is_flash_sale_active): ?>
+                            <span class="flash-sale-price"><?php echo number_format($product['sale_price'], 0, ',', '.'); ?>đ</span>
+                        <?php endif; ?>
                         <?php if ($product['original_price'] > $product['current_price']): ?>
                             <span class="original-price"><?php echo number_format($product['original_price'], 0, ',', '.'); ?>đ</span>
                         <?php endif; ?>
@@ -492,18 +517,17 @@ try {
     </div>
 </div>
 
-<!-- JavaScript xử lý AJAX và SweetAlert2 -->
 <script>
 $(document).ready(function() {
     $('.add-to-cart-form').on('submit', function(e) {
-        e.preventDefault(); // Ngăn hành vi submit mặc định
+        e.preventDefault();
         var form = $(this);
-        var formData = form.serialize(); // Lấy dữ liệu form
+        var formData = form.serialize();
 
         $.ajax({
-            url: '/2/public/pages/product.php',
+            url: '/2/public/pages/product',
             type: 'POST',
-            data: formData + '&add_to_cart=1', // Thêm tham số add_to_cart
+            data: formData + '&add_to_cart=1',
             dataType: 'json',
             success: function(result) {
                 Swal.fire({
@@ -513,7 +537,7 @@ $(document).ready(function() {
                     confirmButtonText: 'OK'
                 }).then(() => {
                     if (result.success) {
-                        window.location.href = 'http://localhost/2/public/pages/cart.php';
+                        window.location.href = 'http://localhost/2/public/pages/cart';
                     }
                 });
             },

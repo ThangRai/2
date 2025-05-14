@@ -43,9 +43,9 @@ if ($action === 'delete' && isset($_GET['id'])) {
     </script>
     <?php unset($_SESSION['message']); ?>
 <?php endif; ?>
-
-<link href="/2/admin/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
-<link href="/2/admin/css/sb-admin-2.min.css" rel="stylesheet">
+<!-- 
+<link href="/2/admin/assets/vendor/fontawesome/css/all.min.css" rel="stylesheet" type="text/css">
+<link href="/2/admin/assets/css/sb-admin-2.min.css" rel="stylesheet"> -->
 <style>
     .card { border-radius: 8px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); }
     .form-group { margin-bottom: 1.5rem; }
@@ -130,6 +130,4 @@ if ($action === 'delete' && isset($_GET['id'])) {
     </div>
 </div>
 
-<script src="/2/admin/vendor/jquery/jquery.min.js"></script>
-<script src="/2/admin/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-<script src="/2/admin/js/sb-admin-2.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>

@@ -90,7 +90,7 @@ $partners = $stmt->fetchAll(PDO::FETCH_ASSOC);
 </head>
 <body>
     <div class="container">
-        <h1>Danh sách đối tác</h1>
+        <h1 class="section-title">Danh sách đối tác</h1>
         <div class="partners-grid">
             <?php foreach ($partners as $partner): ?>
                 <div class="partner-card">

@@ -4,12 +4,12 @@ require_once 'config/db_connect.php';
 require_once 'config/constants.php';
 
 // Kiểm tra đăng nhập
-if (!isset($_SESSION['admin_id'])) {
-    $_SESSION['message'] = ['type' => 'error', 'text' => 'Vui lòng đăng nhập để truy cập.'];
-    error_log('Redirecting to login.php: No admin_id in session');
-    echo '<script>window.location.href="login.php";</script>';
-    exit;
-}
+// if (!isset($_SESSION['admin_id'])) {
+//     $_SESSION['message'] = ['type' => 'error', 'text' => 'Vui lòng đăng nhập để truy cập.'];
+//     error_log('Redirecting to login.php: No admin_id in session');
+//     echo '<script>window.location.href="login.php";</script>';
+//     exit;
+// }
 
 // Debug session
 error_log('Index.php session data: ' . print_r($_SESSION, true));

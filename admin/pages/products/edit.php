@@ -2,6 +2,7 @@
 ob_start();
 require_once 'C:/laragon/www/2/admin/config/db_connect.php';
 
+// Kiểm tra ID sản phẩm
 if (!isset($_GET['id'])) {
     $_SESSION['message'] = ['type' => 'error', 'text' => 'Không tìm thấy sản phẩm để chỉnh sửa.'];
     header("Location: ?page=products");
@@ -19,12 +20,25 @@ if (!$product) {
     exit;
 }
 
+// Lấy thông tin Flash Sale
+$stmt = $pdo->prepare("SELECT sale_price, start_time, end_time, is_active AS flash_sale_active FROM flash_sales WHERE product_id = ?");
+$stmt->execute([$id]);
+$flash_sale = $stmt->fetch(PDO::FETCH_ASSOC);
+
+// Lấy danh sách danh mục và thuộc tính
 $categories = $pdo->query("SELECT * FROM categories")->fetchAll(PDO::FETCH_ASSOC);
+$attributes = $pdo->query("SELECT * FROM product_attributes")->fetchAll(PDO::FETCH_ASSOC);
+
+// Lấy thuộc tính của sản phẩm
+$product_attributes = [];
+$stmt = $pdo->prepare("SELECT attribute_id, value FROM attribute_values WHERE product_id = ?");
+$stmt->execute([$id]);
+$product_attributes = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = trim($_POST['name'] ?? '');
     $category_id = (int)($_POST['category_id'] ?? 0);
-    $content = trim($_POST['noidung'] ?? ''); // Lấy từ noidung thay vì content
+    $content = trim($_POST['noidung'] ?? '');
     $description = trim($_POST['description'] ?? '');
     $original_price = (float)($_POST['original_price'] ?? 0);
     $current_price = (float)($_POST['current_price'] ?? 0);
@@ -33,6 +47,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $seo_title = trim($_POST['seo_title'] ?? '');
     $seo_description = trim($_POST['seo_description'] ?? '');
     $seo_keywords = trim($_POST['seo_keywords'] ?? '');
+    $sale_price = (float)($_POST['sale_price'] ?? 0);
+    $start_time = trim($_POST['start_time'] ?? '');
+    $end_time = trim($_POST['end_time'] ?? '');
+    $flash_sale_active = isset($_POST['flash_sale_active']) ? 1 : 0;
+    $attributes_values = isset($_POST['attributes']) ? $_POST['attributes'] : [];
 
     // Kiểm tra lỗi
     $errors = [];
@@ -40,6 +59,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($category_id)) $errors[] = 'Vui lòng chọn danh mục.';
     if (!is_numeric($original_price) || $original_price < 0) $errors[] = 'Giá gốc phải là số dương.';
     if (!is_numeric($current_price) || $current_price < 0) $errors[] = 'Giá hiện tại phải là số dương.';
+    if ($sale_price > 0 && (!is_numeric($sale_price) || $sale_price >= $current_price)) {
+        $errors[] = 'Giá Flash Sale phải nhỏ hơn giá hiện tại.';
+    }
+    if ($sale_price > 0 && (empty($start_time) || empty($end_time))) {
+        $errors[] = 'Vui lòng nhập thời gian bắt đầu và kết thúc cho Flash Sale.';
+    }
+    if ($sale_price > 0 && strtotime($end_time) <= strtotime($start_time)) {
+        $errors[] = 'Thời gian kết thúc Flash Sale phải sau thời gian bắt đầu.';
+    }
     if (!is_numeric($stock) || $stock < 0) $errors[] = 'Số lượng tồn kho phải là số không âm.';
     if (!empty($_FILES['image']['name'])) {
         $allowed_types = ['image/jpeg', 'image/png'];
@@ -77,7 +105,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (!is_dir($target_dir)) {
                     mkdir($target_dir, 0755, true);
                 }
-                $image = $target_dir . basename($_FILES['image']['name']);
+                $image = $target_dir . time() . '_' . basename($_FILES['image']['name']);
                 if (!move_uploaded_file($_FILES['image']['tmp_name'], $image)) {
                     throw new Exception('Lỗi khi tải lên hình ảnh sản phẩm.');
                 }
@@ -90,7 +118,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (!is_dir($target_dir)) {
                     mkdir($target_dir, 0755, true);
                 }
-                $seo_image = $target_dir . basename($_FILES['seo_image']['name']);
+                $seo_image = $target_dir . time() . '_' . basename($_FILES['seo_image']['name']);
                 if (!move_uploaded_file($_FILES['seo_image']['tmp_name'], $seo_image)) {
                     throw new Exception('Lỗi khi tải lên ảnh đại diện SEO.');
                 }
@@ -99,6 +127,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Cập nhật sản phẩm
             $stmt = $pdo->prepare("UPDATE products SET name = ?, category_id = ?, content = ?, description = ?, image = ?, original_price = ?, current_price = ?, stock = ?, is_active = ?, seo_image = ?, seo_title = ?, seo_description = ?, seo_keywords = ? WHERE id = ?");
             $stmt->execute([$name, $category_id, $content, $description, $image, $original_price, $current_price, $stock, $is_active, $seo_image, $seo_title, $seo_description, $seo_keywords, $id]);
+
+            // Cập nhật Flash Sale
+            if ($sale_price > 0 && !empty($start_time) && !empty($end_time)) {
+                if ($flash_sale) {
+                    $stmt = $pdo->prepare("UPDATE flash_sales SET sale_price = ?, start_time = ?, end_time = ?, is_active = ? WHERE product_id = ?");
+                    $stmt->execute([$sale_price, $start_time, $end_time, $flash_sale_active, $id]);
+                } else {
+                    $stmt = $pdo->prepare("INSERT INTO flash_sales (product_id, sale_price, start_time, end_time, is_active) VALUES (?, ?, ?, ?, ?)");
+                    $stmt->execute([$id, $sale_price, $start_time, $end_time, $flash_sale_active]);
+                }
+            } else {
+                // Xóa Flash Sale nếu không còn dữ liệu
+                $stmt = $pdo->prepare("DELETE FROM flash_sales WHERE product_id = ?");
+                $stmt->execute([$id]);
+            }
+
+            // Cập nhật thuộc tính sản phẩm
+            $stmt = $pdo->prepare("DELETE FROM attribute_values WHERE product_id = ?");
+            $stmt->execute([$id]);
+            foreach ($attributes_values as $attr_id => $value) {
+                if (!empty($value)) {
+                    $stmt = $pdo->prepare("INSERT INTO attribute_values (product_id, attribute_id, value) VALUES (?, ?, ?)");
+                    $stmt->execute([$id, $attr_id, trim($value)]);
+                }
+            }
 
             $_SESSION['message'] = ['type' => 'success', 'text' => 'Cập nhật sản phẩm thành công.'];
             echo '<script>window.location.href="?page=products";</script>';
@@ -124,7 +177,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
     <!-- CKEditor 5 -->
     <script src="https://cdn.ckeditor.com/ckeditor5/34.0.0/classic/ckeditor.js"></script>
-        <style>
+    <style>
         .form-group {
             margin-bottom: 1.5rem;
         }
@@ -208,9 +261,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         </div>
                                         <div class="form-group">
                                             <label for="noidung">Nội dung</label>
-                                            <textarea class="form-control" id="noidung" name="noidung" rows="4"><?php echo htmlspecialchars($product['content'] ?? ''); ?></textarea>
+                                            <textarea class="form-control" id="noidung" name="noidung" rows="6"><?php echo htmlspecialchars($product['content'] ?? ''); ?></textarea>
                                         </div>
-
                                         <div class="form-group">
                                             <label for="image">Hình ảnh</label>
                                             <?php if (!empty($product['image'])): ?>
@@ -238,6 +290,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                 <label class="form-check-label" for="is_active">Kích hoạt</label>
                                             </div>
                                         </div>
+                                        <!-- Flash Sale -->
+                                        <div class="form-group">
+                                            <label for="sale_price">Giá Flash Sale (VND)</label>
+                                            <input type="number" step="1000" min="0" class="form-control" id="sale_price" name="sale_price" value="<?php echo $flash_sale ? (int)$flash_sale['sale_price'] : ''; ?>">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="start_time">Thời gian bắt đầu Flash Sale</label>
+                                            <input type="datetime-local" class="form-control" id="start_time" name="start_time" value="<?php echo $flash_sale ? date('Y-m-d\TH:i', strtotime($flash_sale['start_time'])) : ''; ?>">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="end_time">Thời gian kết thúc Flash Sale</label>
+                                            <input type="datetime-local" class="form-control" id="end_time" name="end_time" value="<?php echo $flash_sale ? date('Y-m-d\TH:i', strtotime($flash_sale['end_time'])) : ''; ?>">
+                                        </div>
+                                        <div class="form-group">
+                                            <div class="form-check">
+                                                <input type="checkbox" class="form-check-input" id="flash_sale_active" name="flash_sale_active" <?php echo $flash_sale && $flash_sale['flash_sale_active'] ? 'checked' : ''; ?>>
+                                                <label class="form-check-label" for="flash_sale_active">Kích hoạt Flash Sale</label>
+                                            </div>
+                                        </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="form-group">
@@ -260,6 +331,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         <div class="form-group">
                                             <label for="seo_keywords">Từ khóa SEO (phân cách bằng dấu phẩy)</label>
                                             <input type="text" class="form-control" id="seo_keywords" name="seo_keywords" value="<?php echo htmlspecialchars($product['seo_keywords'] ?? ''); ?>">
+                                        </div>
+                                        <!-- Thuộc tính sản phẩm -->
+                                        <div class="form-group">
+                                            <label>Thuộc tính sản phẩm</label>
+                                            <?php foreach ($attributes as $attribute): ?>
+                                                <div class="form-group">
+                                                    <label><?php echo htmlspecialchars($attribute['name']); ?></label>
+                                                    <input type="text" class="form-control" name="attributes[<?php echo $attribute['id']; ?>]" value="<?php echo isset($product_attributes[$attribute['id']]) ? htmlspecialchars($product_attributes[$attribute['id']]) : ''; ?>" placeholder="Nhập giá trị (VD: S, M, L hoặc Đỏ, Xanh)">
+                                                </div>
+                                            <?php endforeach; ?>
+                                            <?php if (empty($attributes)): ?>
+                                                <p class="text-muted">Chưa có thuộc tính. <a href="?page=products&subpage=manage_attributes">Quản lý thuộc tính</a>.</p>
+                                            <?php endif; ?>
                                         </div>
                                     </div>
                                 </div>

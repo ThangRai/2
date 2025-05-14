@@ -148,8 +148,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $action === 'edit' ? 'Sửa bài viết' : 'Thêm bài viết'; ?></title>
-    <link href="/2/admin/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
-    <link href="/2/admin/css/sb-admin-2.min.css" rel="stylesheet">
+    <link href="/2/admin/assets/vendor/fontawesome/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="/2/admin/assets/css/sb-admin-2.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js"></script>
     <style>
@@ -239,10 +239,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </form>
         </div>
     </div>
-
-    <script src="/2/admin/vendor/jquery/jquery.min.js"></script>
-    <script src="/2/admin/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-    <script src="/2/admin/js/sb-admin-2.min.js"></script>
+<script src="/2/admin/assets/js/jquery.min.js"></script>
+<script src="/2/admin/assets/js/bootstrap.bundle.min.js"></script>
+<script src="/2/admin/assets/js/sb-admin-2.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             ClassicEditor

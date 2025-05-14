@@ -9,7 +9,7 @@ if (!isset($_SESSION['admin_id'])) {
 
 // Lấy cấu hình hiện tại
 try {
-    $stmt = $pdo->query("SELECT name, value FROM settings WHERE name LIKE 'columns_%' OR name LIKE 'review_columns_%' OR name LIKE 'partner_columns_%' OR name LIKE 'blog_columns_%'");
+    $stmt = $pdo->query("SELECT name, value FROM settings WHERE name LIKE 'columns_%' OR name LIKE 'review_columns_%' OR name LIKE 'partner_columns_%' OR name LIKE 'blog_columns_%'  OR name LIKE 'service_columns_%'  OR name LIKE 'project_columns_%'");
     $settings = [];
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         $settings[$row['name']] = $row['value'];
@@ -36,7 +36,17 @@ try {
         'blog_columns_425' => 1,
         'blog_columns_768' => 2,
         'blog_columns_1200' => 4,
-        'blog_columns_max' => 6
+        'blog_columns_max' => 6,
+        'service_columns_375' => 2,
+        'service_columns_425' => 3,
+        'service_columns_768' => 4,
+        'service_columns_1200' => 5,
+        'service_columns_max' => 6,
+        'project_columns_375' => 1,
+        'project_columns_425' => 1,
+        'project_columns_768' => 2,
+        'project_columns_1200' => 3,
+        'project_columns_max' => 4
     ];
 }
 
@@ -71,6 +81,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $blog_columns_1200 = (int)$_POST['blog_columns_1200'];
         $blog_columns_max = (int)$_POST['blog_columns_max'];
 
+        // Cấu hình cột dịch vụ
+        $service_columns_375 = (int)$_POST['service_columns_375'];
+        $service_columns_425 = (int)$_POST['service_columns_425'];
+        $service_columns_768 = (int)$_POST['service_columns_768'];
+        $service_columns_1200 = (int)$_POST['service_columns_1200'];
+        $service_columns_max = (int)$_POST['service_columns_max'];
+
+        // Cấu hình cột dịch vụ
+        $project_columns_375 = (int)$_POST['project_columns_375'];
+        $project_columns_425 = (int)$_POST['project_columns_425'];
+        $project_columns_768 = (int)$_POST['project_columns_768'];
+        $project_columns_1200 = (int)$_POST['project_columns_1200'];
+        $project_columns_max = (int)$_POST['project_columns_max'];
+
         // Kiểm tra giá trị hợp lệ
         $valid_range = fn($val) => $val >= 1 && $val <= 6;
         if (!$valid_range($columns_375) || !$valid_range($columns_425) || !$valid_range($columns_768) || 
@@ -83,7 +107,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             !$valid_range($partner_columns_max) ||
             !$valid_range($blog_columns_375) || !$valid_range($blog_columns_425) || 
             !$valid_range($blog_columns_768) || !$valid_range($blog_columns_1200) || 
-            !$valid_range($blog_columns_max)) {
+            !$valid_range($blog_columns_max) ||
+            !$valid_range($service_columns_375) || !$valid_range($service_columns_425) || 
+            !$valid_range($service_columns_768) || !$valid_range($service_columns_1200) || 
+            !$valid_range($service_columns_max) ||
+            !$valid_range($project_columns_375) || !$valid_range($project_columns_425) || 
+            !$valid_range($project_columns_768) || !$valid_range($project_columns_1200) || 
+            !$valid_range($project_columns_max)) {
             throw new Exception('Số cột phải từ 1 đến 6.');
         }
 
@@ -118,6 +148,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->execute(['name' => 'blog_columns_1200', 'value' => $blog_columns_1200]);
         $stmt->execute(['name' => 'blog_columns_max', 'value' => $blog_columns_max]);
 
+         // Cột dịch vụ
+        $stmt->execute(['name' => 'service_columns_375', 'value' => $service_columns_375]);
+        $stmt->execute(['name' => 'service_columns_425', 'value' => $service_columns_425]);
+        $stmt->execute(['name' => 'service_columns_768', 'value' => $service_columns_768]);
+        $stmt->execute(['name' => 'service_columns_1200', 'value' => $service_columns_1200]);
+        $stmt->execute(['name' => 'service_columns_max', 'value' => $service_columns_max]);
+
+        // Cột dự án
+        $stmt->execute(['name' => 'project_columns_375', 'value' => $project_columns_375]);
+        $stmt->execute(['name' => 'project_columns_425', 'value' => $project_columns_425]);
+        $stmt->execute(['name' => 'project_columns_768', 'value' => $project_columns_768]);
+        $stmt->execute(['name' => 'project_columns_1200', 'value' => $project_columns_1200]);
+        $stmt->execute(['name' => 'project_columns_max', 'value' => $project_columns_max]);
+
         $_SESSION['message'] = ['type' => 'success', 'text' => 'Cập nhật cấu hình thành công'];
         echo '<script>window.location.href="?page=cauhinhcot";</script>';
         exit;
@@ -136,8 +180,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cấu hình cột</title>
-    <link href="/2/admin/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
-    <link href="/2/admin/css/sb-admin-2.min.css" rel="stylesheet">
+    <link href="/2/admin/assets/vendor/fontawesome/css/all.min.css" rel="stylesheet" type="text/css">
+    <!-- <link href="/2/admin/assets/css/sb-admin-2.min.css" rel="stylesheet"> -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         .card { border-radius: 8px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); }
@@ -181,29 +225,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <!-- Cột sản phẩm -->
                 <h6 class="m-0 font-weight-bold text-primary mb-3">Sản phẩm</h6>
                 <div class="row">
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <div class="form-group">
                             <label for="columns_375">Dưới 375px (Mobile nhỏ) <span class="text-danger">*</span></label>
                             <input type="number" class="form-control" id="columns_375" name="columns_375" value="<?php echo htmlspecialchars($settings['columns_375']); ?>" min="1" max="6" required>
                         </div>
+                         <div class="form-group">
+                            <label for="columns_768">Dưới 768px (Tablet) <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="columns_768" name="columns_768" value="<?php echo htmlspecialchars($settings['columns_768']); ?>" min="1" max="6" required>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
                         <div class="form-group">
                             <label for="columns_425">Dưới 425px <span class="text-danger">*</span></label>
                             <input type="number" class="form-control" id="columns_425" name="columns_425" value="<?php echo htmlspecialchars($settings['columns_425']); ?>" min="1" max="6" required>
                         </div>
                         <div class="form-group">
-                            <label for="columns_768">Dưới 768px (Tablet) <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" id="columns_768" name="columns_768" value="<?php echo htmlspecialchars($settings['columns_768']); ?>" min="1" max="6" required>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
                             <label for="columns_1200">Dưới 1200px (Desktop nhỏ) <span class="text-danger">*</span></label>
                             <input type="number" class="form-control" id="columns_1200" name="columns_1200" value="<?php echo htmlspecialchars($settings['columns_1200']); ?>" min="1" max="6" required>
                         </div>
+                    </div>
+                    <div class="col-md-4">
                         <div class="form-group">
                             <label for="columns_max">Tối đa (1200px trở lên) <span class="text-danger">*</span></label>
                             <input type="number" class="form-control" id="columns_max" name="columns_max" value="<?php echo htmlspecialchars($settings['columns_max']); ?>" min="1" max="6" required>
                         </div>
+
                     </div>
                 </div>
 
@@ -211,7 +258,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <hr class="my-4">
                 <h6 class="m-0 font-weight-bold text-primary mb-3">Ý kiến khách hàng</h6>
                 <div class="row">
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <div class="form-group">
                             <label for="review_columns_375">Dưới 375px (Mobile nhỏ) <span class="text-danger">*</span></label>
                             <input type="number" class="form-control" id="review_columns_375" name="review_columns_375" value="<?php echo htmlspecialchars($settings['review_columns_375']); ?>" min="1" max="6" required>
@@ -220,16 +267,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <label for="review_columns_425">Dưới 425px <span class="text-danger">*</span></label>
                             <input type="number" class="form-control" id="review_columns_425" name="review_columns_425" value="<?php echo htmlspecialchars($settings['review_columns_425']); ?>" min="1" max="6" required>
                         </div>
+                    </div>
+                    <div class="col-md-4">
                         <div class="form-group">
                             <label for="review_columns_768">Dưới 768px (Tablet) <span class="text-danger">*</span></label>
                             <input type="number" class="form-control" id="review_columns_768" name="review_columns_768" value="<?php echo htmlspecialchars($settings['review_columns_768']); ?>" min="1" max="6" required>
                         </div>
-                    </div>
-                    <div class="col-md-6">
                         <div class="form-group">
                             <label for="review_columns_1200">Dưới 1200px (Desktop nhỏ) <span class="text-danger">*</span></label>
                             <input type="number" class="form-control" id="review_columns_1200" name="review_columns_1200" value="<?php echo htmlspecialchars($settings['review_columns_1200']); ?>" min="1" max="6" required>
                         </div>
+                    </div>
+                    <div class="col-md-4">
                         <div class="form-group">
                             <label for="review_columns_max">Tối đa (1200px trở lên) <span class="text-danger">*</span></label>
                             <input type="number" class="form-control" id="review_columns_max" name="review_columns_max" value="<?php echo htmlspecialchars($settings['review_columns_max']); ?>" min="1" max="6" required>
@@ -241,7 +290,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <hr class="my-4">
                 <h6 class="m-0 font-weight-bold text-primary mb-3">Đối tác</h6>
                 <div class="row">
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <div class="form-group">
                             <label for="partner_columns_375">Dưới 375px (Mobile nhỏ) <span class="text-danger">*</span></label>
                             <input type="number" class="form-control" id="partner_columns_375" name="partner_columns_375" value="<?php echo htmlspecialchars($settings['partner_columns_375']); ?>" min="1" max="6" required>
@@ -250,16 +299,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <label for="partner_columns_425">Dưới 425px <span class="text-danger">*</span></label>
                             <input type="number" class="form-control" id="partner_columns_425" name="partner_columns_425" value="<?php echo htmlspecialchars($settings['partner_columns_425']); ?>" min="1" max="6" required>
                         </div>
+                    </div>
+                    <div class="col-md-4">
                         <div class="form-group">
                             <label for="partner_columns_768">Dưới 768px (Tablet) <span class="text-danger">*</span></label>
                             <input type="number" class="form-control" id="partner_columns_768" name="partner_columns_768" value="<?php echo htmlspecialchars($settings['partner_columns_768']); ?>" min="1" max="6" required>
                         </div>
-                    </div>
-                    <div class="col-md-6">
                         <div class="form-group">
                             <label for="partner_columns_1200">Dưới 1200px (Desktop nhỏ) <span class="text-danger">*</span></label>
                             <input type="number" class="form-control" id="partner_columns_1200" name="partner_columns_1200" value="<?php echo htmlspecialchars($settings['partner_columns_1200']); ?>" min="1" max="6" required>
                         </div>
+                    </div>
+                    <div class="col-md-4">
                         <div class="form-group">
                             <label for="partner_columns_max">Tối đa (1200px trở lên) <span class="text-danger">*</span></label>
                             <input type="number" class="form-control" id="partner_columns_max" name="partner_columns_max" value="<?php echo htmlspecialchars($settings['partner_columns_max']); ?>" min="1" max="6" required>
@@ -271,7 +322,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <hr class="my-4">
                 <h6 class="m-0 font-weight-bold text-primary mb-3">Bài viết blog</h6>
                 <div class="row">
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <div class="form-group">
                             <label for="blog_columns_375">Dưới 375px (Mobile nhỏ) <span class="text-danger">*</span></label>
                             <input type="number" class="form-control" id="blog_columns_375" name="blog_columns_375" value="<?php echo htmlspecialchars($settings['blog_columns_375']); ?>" min="1" max="6" required>
@@ -280,19 +331,85 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <label for="blog_columns_425">Dưới 425px <span class="text-danger">*</span></label>
                             <input type="number" class="form-control" id="blog_columns_425" name="blog_columns_425" value="<?php echo htmlspecialchars($settings['blog_columns_425']); ?>" min="1" max="6" required>
                         </div>
+                    </div>
+                    <div class="col-md-4">
                         <div class="form-group">
                             <label for="blog_columns_768">Dưới 768px (Tablet) <span class="text-danger">*</span></label>
                             <input type="number" class="form-control" id="blog_columns_768" name="blog_columns_768" value="<?php echo htmlspecialchars($settings['blog_columns_768']); ?>" min="1" max="6" required>
                         </div>
-                    </div>
-                    <div class="col-md-6">
                         <div class="form-group">
                             <label for="blog_columns_1200">Dưới 1200px (Desktop nhỏ) <span class="text-danger">*</span></label>
                             <input type="number" class="form-control" id="blog_columns_1200" name="blog_columns_1200" value="<?php echo htmlspecialchars($settings['blog_columns_1200']); ?>" min="1" max="6" required>
                         </div>
+                    </div>
+                    <div class="col-md-4">
                         <div class="form-group">
                             <label for="blog_columns_max">Tối đa (1200px trở lên) <span class="text-danger">*</span></label>
                             <input type="number" class="form-control" id="blog_columns_max" name="blog_columns_max" value="<?php echo htmlspecialchars($settings['blog_columns_max']); ?>" min="1" max="6" required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cột Dịch vụ -->
+                <hr class="my-4">
+                <h6 class="m-0 font-weight-bold text-primary mb-3">Bài viết Dịch vụ</h6>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="service_columns_375">Dưới 375px (Mobile nhỏ) <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="service_columns_375" name="service_columns_375" value="<?php echo htmlspecialchars($settings['service_columns_375']); ?>" min="1" max="6" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="service_columns_425">Dưới 425px <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="service_columns_425" name="service_columns_425" value="<?php echo htmlspecialchars($settings['service_columns_425']); ?>" min="1" max="6" required>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="service_columns_768">Dưới 768px (Tablet) <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="service_columns_768" name="service_columns_768" value="<?php echo htmlspecialchars($settings['service_columns_768']); ?>" min="1" max="6" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="service_columns_1200">Dưới 1200px (Desktop nhỏ) <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="service_columns_1200" name="service_columns_1200" value="<?php echo htmlspecialchars($settings['service_columns_1200']); ?>" min="1" max="6" required>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="service_columns_max">Tối đa (1200px trở lên) <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="service_columns_max" name="service_columns_max" value="<?php echo htmlspecialchars($settings['service_columns_max']); ?>" min="1" max="6" required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cột Dự án -->
+                <hr class="my-4">
+                <h6 class="m-0 font-weight-bold text-primary mb-3">Bài viết Dự án</h6>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="project_columns_375">Dưới 375px (Mobile nhỏ) <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="project_columns_375" name="project_columns_375" value="<?php echo htmlspecialchars($settings['project_columns_375']); ?>" min="1" max="6" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="project_columns_425">Dưới 425px <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="project_columns_425" name="project_columns_425" value="<?php echo htmlspecialchars($settings['project_columns_425']); ?>" min="1" max="6" required>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="project_columns_768">Dưới 768px (Tablet) <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="project_columns_768" name="project_columns_768" value="<?php echo htmlspecialchars($settings['project_columns_768']); ?>" min="1" max="6" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="project_columns_1200">Dưới 1200px (Desktop nhỏ) <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="project_columns_1200" name="project_columns_1200" value="<?php echo htmlspecialchars($settings['project_columns_1200']); ?>" min="1" max="6" required>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="project_columns_max">Tối đa (1200px trở lên) <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="project_columns_max" name="project_columns_max" value="<?php echo htmlspecialchars($settings['project_columns_max']); ?>" min="1" max="6" required>
                         </div>
                     </div>
                 </div>
@@ -302,8 +419,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </div>
 
-    <script src="/2/admin/vendor/jquery/jquery.min.js"></script>
-    <script src="/2/admin/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-    <script src="/2/admin/js/sb-admin-2.min.js"></script>
 </body>
 </html>

@@ -294,7 +294,7 @@ try {
                                     <?php endif; ?>
                                 </a>
                             <?php else: ?>
-                                <a href="/2/public/login"><i class="fas fa-user"></i></a>
+                                <a href="/2/public/login.php"><i class="fas fa-user"></i></a>
                             <?php endif; ?>
                         </div>
                     </div>

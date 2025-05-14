@@ -117,7 +117,7 @@ $reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
 </head>
 <body>
     <div class="container">
-        <h1>Ý kiến khách hàng</h1>
+        <h1 class="section-title">Ý kiến khách hàng</h1>
         <div class="reviews-grid">
             <?php foreach ($reviews as $review): ?>
                 <div class="review-card">

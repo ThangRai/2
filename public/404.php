@@ -16,81 +16,91 @@ header('HTTP/1.0 404 Not Found');
     <title>404 - Không Tìm Thấy Trang</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Arvo:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
     <style>
-        .container {
-            max-width: 600px;
-            margin: 20px auto;
-            padding: 30px;
+        .page_404 {
+            padding: 40px 0;
+            background: #fff;
+            font-family: 'Arvo', serif;
+        }
+        .page_404 img {
+            width: 100%;
+        }
+        .four_zero_four_bg {
+            background-image: url(https://cdn.dribbble.com/users/285475/screenshots/2083086/dribbble_1.gif);
+            height: 400px;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: contain;
+        }
+        .four_zero_four_bg h1 {
+            font-size: 80px;
+            color: #333;
             text-align: center;
-            border-radius: 15px;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
-            animation: fadeIn 0.5s ease-out;
+            margin: 0;
         }
-        h1 {
-    line-height: 1.5 !important;
-    font-size: 3.5em !important;
-    font-weight: 700;
-    color: #ff4757;
-    margin-bottom: 20px !important;
-    background: linear-gradient(90deg, #ff4757, #ff6b6b);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-        p {
-            font-size: 1.2em;
-            color: #4b5563;
-            margin-bottom: 30px;
-            line-height: 1.6;
+        .four_zero_four_bg h3 {
+            font-size: 80px;
+            color: #333;
+            text-align: center;
         }
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: linear-gradient(135deg, #3b82f6, #93c5fd);
-            color: #fff;
-            padding: 12px 25px;
-            border-radius: 25px;
+        .contant_box_404 {
+            margin-top: -50px;
+            text-align: center;
+        }
+        .contant_box_404 h3.h2 {
+            font-size: 30px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .contant_box_404 p {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+        .link_404 {
+            color: #fff !important;
+            padding: 10px 20px;
+            background: #39ac31;
+            margin: 20px 0;
+            display: inline-block;
             text-decoration: none;
-            font-size: 1.1em;
-            font-weight: 500;
-            transition: background 0.3s ease, transform 0.3s ease;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: background 0.3s ease;
         }
-        .btn:hover {
-            background: linear-gradient(135deg, #2563eb, #60a5fa);
-            transform: scale(1.05);
+        .link_404:hover {
+            background: #2d8a26;
         }
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
+        @media (max-width: 768px) {
+            .four_zero_four_bg {
+                height: 300px;
             }
-            to {
-                opacity: 1;
-                transform: translateY(0);
+            .four_zero_four_bg h1 {
+                font-size: 60px;
+            }
+            .four_zero_four_bg h3 {
+                font-size: 60px;
+            }
+            .contant_box_404 h3.h2 {
+                font-size: 24px;
+            }
+            .contant_box_404 p {
+                font-size: 16px;
             }
         }
         @media (max-width: 576px) {
-            .container {
-                padding: 20px;
+            .four_zero_four_bg {
+                height: 250px;
             }
-            h1 {
-                font-size: 2.5em;
+            .four_zero_four_bg h1 {
+                font-size: 50px;
             }
-            p {
-                font-size: 1em;
+            .four_zero_four_bg h3 {
+                font-size: 50px;
             }
-            .btn {
-                padding: 10px 20px;
-                font-size: 1em;
-            }
-        }
-        @media (max-width: 425px) {
-            h1 {
-                font-size: 2em;
-            }
-            p {
-                font-size: 0.9em;
+            .contant_box_404 {
+                margin-top: -30px;
             }
         }
     </style>
@@ -104,11 +114,24 @@ header('HTTP/1.0 404 Not Found');
     }
     ?>
 
-    <div class="container">
-        <h1>404 - Không Tìm Thấy</h1>
-        <p>Xin lỗi, trang bạn đang tìm kiếm không tồn tại hoặc đã bị di chuyển. Vui lòng kiểm tra lại URL hoặc quay về trang chủ.</p>
-        <a href="/2/public/" class="btn"><i class="fas fa-home"></i> Quay Về Trang Chủ</a>
-    </div>
+    <section class="page_404">
+        <div class="container">
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="col-sm-10 col-sm-offset-1 text-center">
+                        <div class="four_zero_four_bg">
+                            <h1 class="text-center">404</h1>
+                        </div>
+                        <div class="contant_box_404">
+                            <h3 class="h2">Look like you're lost</h3>
+                            <p>the page you are looking for not avaible!</p>
+                            <a href="/2/public/" class="link_404">Go to Home</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
     <?php
     if (file_exists('C:/laragon/www/2/public/includes/footer.php')) {

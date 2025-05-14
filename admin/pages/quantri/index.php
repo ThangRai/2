@@ -2,6 +2,11 @@
 ob_start(); // Bắt đầu output buffering
 
 require_once 'C:/laragon/www/2/admin/config/db_connect.php';
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+    require 'C:/laragon/www/2/public/includes/PHPMailer/src/Exception.php';
+    require 'C:/laragon/www/2/public/includes/PHPMailer/src/PHPMailer.php';
+    require 'C:/laragon/www/2/public/includes/PHPMailer/src/SMTP.php';
 
 // Kiểm tra đăng nhập
 if (!isset($_SESSION['admin_id'])) {
@@ -9,22 +14,106 @@ if (!isset($_SESSION['admin_id'])) {
     exit;
 }
 
-// Kiểm tra quyền truy cập
-$stmt = $pdo->prepare("SELECT role_id FROM admins WHERE id = ?");
-$stmt->execute([$_SESSION['admin_id']]);
-$admin = $stmt->fetch(PDO::FETCH_ASSOC);
+// Kiểm tra quyền truy cập (giữ nguyên mã gốc, bỏ comment nếu cần)
+// $stmt = $pdo->prepare("SELECT role_id FROM admins WHERE id = ?");
+// $stmt->execute([$_SESSION['admin_id']]);
+// $admin = $stmt->fetch(PDO::FETCH_ASSOC);
 
-$allowed_roles = [1]; // super_admin (1)
-if (!$admin || !in_array($admin['role_id'], $allowed_roles)) {
-    error_log('Access denied for admin_id: ' . ($_SESSION['admin_id'] ?? 'unknown') . ', role_id: ' . ($admin['role_id'] ?? 'none'));
-    $_SESSION['message'] = ['type' => 'error', 'text' => 'Bạn không có quyền truy cập trang này.'];
-    echo '<script>window.location.href="index.php?page=dashboard";</script>';
-    exit;
-}
+// $allowed_roles = [1]; // super_admin (1)
+// if (!$admin || !in_array($admin['role_id'], $allowed_roles)) {
+//     error_log('Access denied for admin_id: ' . ($_SESSION['admin_id'] ?? 'unknown') . ', role_id: ' . ($admin['role_id'] ?? 'none'));
+//     $_SESSION['message'] = ['type' => 'error', 'text' => 'Bạn không có quyền truy cập trang này.'];
+//     echo '<script>window.location.href="index.php?page=dashboard";</script>';
+//     exit;
+// }
 
 // Lấy danh sách roles để hiển thị trong form
 $stmt = $pdo->query("SELECT id, name FROM roles");
 $roles = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Xử lý gửi thông báo nội bộ
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_notification'])) {
+    $admin_ids = $_POST['admin_ids'] ?? [];
+    $subject = trim($_POST['subject'] ?? '');
+    $message_content = trim($_POST['message_content'] ?? '');
+
+    $errors = [];
+
+    if (empty($admin_ids)) {
+        $errors[] = 'Vui lòng chọn ít nhất một nhân viên';
+    }
+    if (empty($subject)) {
+        $errors[] = 'Tiêu đề thông báo không được để trống';
+    }
+    if (empty($message_content)) {
+        $errors[] = 'Nội dung thông báo không được để trống';
+    }
+
+    if (empty($errors)) {
+        // Lấy cấu hình SMTP từ bảng settings
+        $smtp_settings = [];
+        $stmt = $pdo->query("SELECT name, value FROM settings WHERE name LIKE 'smtp_%'");
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $smtp_settings[$row['name']] = $row['value'];
+        }
+
+        if (empty($smtp_settings['smtp_host']) || empty($smtp_settings['smtp_port']) || empty($smtp_settings['smtp_username']) || empty($smtp_settings['smtp_from'])) {
+            $errors[] = 'Cấu hình SMTP không đầy đủ';
+        } else {
+            // Lấy danh sách email của admin được chọn
+            $placeholders = str_repeat('?,', count($admin_ids) - 1) . '?';
+            $stmt = $pdo->prepare("SELECT id, name, email FROM admins WHERE id IN ($placeholders)");
+            $stmt->execute($admin_ids);
+            $selected_admins = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Gửi email bằng PHPMailer
+            $mail = new PHPMailer(true);
+            try {
+                // Cấu hình SMTP
+                $mail->isSMTP();
+                $mail->Host = $smtp_settings['smtp_host'];
+                $mail->SMTPAuth = true;
+                $mail->Username = $smtp_settings['smtp_username'];
+                $mail->Password = $smtp_settings['smtp_password'];
+                $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+                $mail->Port = $smtp_settings['smtp_port'];
+
+                $mail->CharSet = 'UTF-8';
+                $mail->Encoding = 'base64';
+
+                // Người gửi
+                $mail->setFrom($smtp_settings['smtp_from'], $smtp_settings['smtp_from_name'] ?? 'Admin System');
+                $mail->CharSet = 'UTF-8';
+
+                // Gửi email cho từng admin
+                foreach ($selected_admins as $admin) {
+                    $mail->addAddress($admin['email'], $admin['name']);
+                    $mail->Subject = $subject;
+                    $mail->Body = nl2br(htmlspecialchars($message_content));
+                    $mail->isHTML(true);
+
+                    if (!$mail->send()) {
+                        $errors[] = "Không thể gửi email tới {$admin['email']}";
+                    }
+                    $mail->clearAddresses();
+                }
+
+                if (empty($errors)) {
+                    $_SESSION['message'] = ['type' => 'success', 'text' => 'Gửi thông báo thành công'];
+                }
+            } catch (Exception $e) {
+                error_log('Send notification error: ' . $mail->ErrorInfo);
+                $errors[] = 'Lỗi khi gửi thông báo: ' . $mail->ErrorInfo;
+            }
+        }
+    }
+
+    if (!empty($errors)) {
+        $_SESSION['message'] = ['type' => 'error', 'text' => implode('<br>', $errors)];
+    }
+    echo '<script>window.location.href="?page=quantri";</script>';
+    exit;
+}
 
 // Xử lý thêm admin
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_admin'])) {
@@ -195,7 +284,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_admin'])) {
         } elseif ($file['size'] > 2 * 1024 * 1024) {
             $errors[] = 'Ảnh đại diện không được lớn hơn 2MB';
         } else {
-            $avatar_name = 'admin_' . $edit_id . '_' . time() . '.' . $ext;
+$avatar_name = 'admin_' . $edit_id . '_' . time() . '.' . $ext;
             $upload_dir = 'uploads/avatars/';
             if (!is_dir($upload_dir)) {
                 mkdir($upload_dir, 0777, true);
@@ -300,6 +389,37 @@ $admins = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 <div class="d-sm-flex align-items-center justify-content-between mb-4">
     <h1 class="h3 mb-0 text-gray-800">Quản trị</h1>
+</div>
+
+<!-- Form gửi thông báo nội bộ -->
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Gửi Thông Báo Nội Bộ</h6>
+    </div>
+    <div class="card-body">
+        <form method="POST">
+            <div class="form-group">
+                <label for="admin_ids">Chọn Nhân Viên <span class="text-danger">*</span></label>
+                <select class="form-control" id="admin_ids" name="admin_ids[]" multiple required>
+                    <?php foreach ($admins as $admin): ?>
+                        <option value="<?php echo htmlspecialchars($admin['id']); ?>">
+                            <?php echo htmlspecialchars($admin['name'] . ' (' . $admin['email'] . ')'); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+                <small class="form-text text-muted">Giữ Ctrl để chọn nhiều nhân viên.</small>
+            </div>
+            <div class="form-group">
+                <label for="subject">Tiêu đề <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="subject" name="subject" required>
+            </div>
+            <div class="form-group">
+                <label for="message_content">Nội dung <span class="text-danger">*</span></label>
+                <textarea class="form-control" id="message_content" name="message_content" rows="5" required></textarea>
+            </div>
+            <button type="submit" name="send_notification" class="btn btn-primary">Gửi Thông Báo</button>
+        </form>
+    </div>
 </div>
 
 <!-- Form thêm/sửa admin -->
@@ -435,13 +555,4 @@ $admins = $stmt->fetchAll(PDO::FETCH_ASSOC);
     </div>
 </div>
 
-<script>
-$(document).ready(function() {
-    $('#dataTable').DataTable({
-        "language": {
-            "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Vietnamese.json"
-        }
-    });
-});
-</script>
 <?php ob_end_flush(); ?>

@@ -10,17 +10,17 @@ if (!isset($_SESSION['admin_id'])) {
 }
 
 // Kiểm tra quyền truy cập
-$stmt = $pdo->prepare("SELECT role_id FROM admins WHERE id = ?");
-$stmt->execute([$_SESSION['admin_id']]);
-$admin = $stmt->fetch(PDO::FETCH_ASSOC);
+// $stmt = $pdo->prepare("SELECT role_id FROM admins WHERE id = ?");
+// $stmt->execute([$_SESSION['admin_id']]);
+// $admin = $stmt->fetch(PDO::FETCH_ASSOC);
 
-$allowed_roles = [1, 2]; // super_admin (1), staff (2)
-if (!$admin || !in_array($admin['role_id'], $allowed_roles)) {
-    error_log('Từ chối truy cập cho admin_id: ' . ($_SESSION['admin_id'] ?? 'không xác định') . ', role_id: ' . ($admin['role_id'] ?? 'không có'));
-    $_SESSION['message'] = ['type' => 'error', 'text' => 'Bạn không có quyền truy cập trang này.'];
-    echo '<script>window.location.href="index.php?page=dashboard";</script>';
-    exit;
-}
+// $allowed_roles = [1, 2]; // super_admin (1), staff (2)
+// if (!$admin || !in_array($admin['role_id'], $allowed_roles)) {
+//     error_log('Từ chối truy cập cho admin_id: ' . ($_SESSION['admin_id'] ?? 'không xác định') . ', role_id: ' . ($admin['role_id'] ?? 'không có'));
+//     $_SESSION['message'] = ['type' => 'error', 'text' => 'Bạn không có quyền truy cập trang này.'];
+//     echo '<script>window.location.href="index.php?page=dashboard";</script>';
+//     exit;
+// }
 
 // Debug session
 error_log('Dữ liệu session: ' . print_r($_SESSION, true));
@@ -122,7 +122,7 @@ $total_pages = ceil($total_reviews / $limit);
                             <td><?php echo $review_item['id']; ?></td>
                             <td>
                                 <?php if ($review_item['avatar']): ?>
-                                    <img src="<?php echo htmlspecialchars($review_item['avatar']); ?>" alt="Avatar" style="max-width: 50px; max-height: 50px;">
+                                    <img src="http://localhost/2/admin/uploads/dgkhachhang/<?php echo htmlspecialchars($review_item['avatar']); ?>" alt="Avatar" style="max-width: 50px; max-height: 50px;">
                                 <?php else: ?>
                                     Không có
                                 <?php endif; ?>

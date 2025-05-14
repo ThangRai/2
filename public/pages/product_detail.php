@@ -20,7 +20,7 @@ try {
     $slug = isset($_GET['slug']) ? trim($_GET['slug']) : '';
     if (empty($slug)) {
         $_SESSION['error'] = 'Không tìm thấy sản phẩm! (Slug rỗng)';
-        header('Location: /2/public/pages/product.php');
+        header('Location: /2/public/pages/product');
         exit;
     }
 
@@ -28,21 +28,39 @@ try {
     $stmt = $pdo->query("SHOW COLUMNS FROM products LIKE 'detailed_description'");
     $hasDetailedDescription = $stmt->rowCount() > 0;
 
-    // Lấy thông tin sản phẩm
-    $query = "SELECT id, slug, name, image, description, content, stock, original_price, current_price, seo_image, seo_title, seo_description, seo_keywords";
+    // Lấy thông tin sản phẩm và Flash Sale
+    $query = "SELECT p.id, p.slug, p.name, p.image, p.description, p.content, p.stock, 
+                     p.original_price, p.current_price, p.seo_image, p.seo_title, 
+                     p.seo_description, p.seo_keywords";
     if ($hasDetailedDescription) {
-        $query .= ", detailed_description";
+        $query .= ", p.detailed_description";
     }
-    $query .= " FROM products WHERE slug = ? AND is_active = 1";
+    $query .= ", fs.sale_price, fs.start_time, fs.end_time, fs.is_active AS flash_sale_active 
+               FROM products p 
+               LEFT JOIN flash_sales fs ON p.id = fs.product_id 
+               WHERE p.slug = ? AND p.is_active = 1";
     $stmt = $pdo->prepare($query);
     $stmt->execute([$slug]);
     $product = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$product) {
         $_SESSION['error'] = "Sản phẩm không tồn tại hoặc đã bị xóa! (Slug: $slug)";
-        header('Location: /2/public/pages/product.php');
+        header('Location: /2/public/pages/product');
         exit;
     }
+
+    // Lấy thuộc tính sản phẩm
+    $stmt = $pdo->prepare("SELECT pa.name, av.value 
+                           FROM attribute_values av 
+                           JOIN product_attributes pa ON av.attribute_id = pa.id 
+                           WHERE av.product_id = ?");
+    $stmt->execute([$product['id']]);
+    $product_attributes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Kiểm tra Flash Sale
+    $is_flash_sale_active = $product['flash_sale_active'] && 
+                            strtotime($product['start_time']) <= time() && 
+                            strtotime($product['end_time']) >= time();
 
     // Xử lý thêm vào giỏ hàng
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
@@ -69,14 +87,14 @@ try {
                 } else {
                     $_SESSION['cart'][$product_id] = [
                         'name' => $cart_product['name'],
-                        'price' => $cart_product['current_price'],
+                        'price' => $is_flash_sale_active ? $product['sale_price'] : $cart_product['current_price'],
                         'quantity' => $quantity,
                         'stock' => $cart_product['stock'],
                         'image' => $cart_product['image']
                     ];
                 }
                 $_SESSION['success'] = 'Đã thêm vào giỏ hàng!';
-                header('Location: /2/public/pages/cart.php');
+                header('Location: /2/public/pages/cart');
                 exit;
             } else {
                 $_SESSION['error'] = 'Số lượng vượt quá tồn kho!';
@@ -134,7 +152,7 @@ try {
         $reviews[$key]['replies'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // Lọc đánh giá trùng lặp (nếu cần)
+    // Lọc đánh giá trùng lặp
     $filtered_reviews = [];
     $seen_ids = [];
     foreach ($reviews as $review) {
@@ -152,8 +170,8 @@ try {
 
 } catch (Exception $e) {
     error_log('Product detail error: ' . $e->getMessage() . ' | Slug: ' . $slug);
-    $_SESSION['error'] = 'Có lỗi xảy ra, vui lòng thử lại! (Lỗi: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES) . ')';
-    header('Location: /2/public/pages/product.php');
+    $_SESSION['error'] = 'Có lỗi xảy ra, vui lòng thử lại!';
+    header('Location: /2/public/pages/product');
     exit;
 }
 ?>
@@ -171,7 +189,6 @@ try {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
@@ -243,6 +260,18 @@ try {
             margin-bottom: 25px;
             font-weight: 600;
         }
+        .product-price .flash-sale-price {
+            font-size: 34px;
+            color: #ff4757;
+            font-weight: 700;
+            display: block;
+            margin-bottom: 10px;
+        }
+        .product-price .flash-sale-price .end-time {
+            font-size: 16px;
+            color: #2d3436;
+            font-weight: 400;
+        }
         .product-price .current-price {
             font-size: 32px;
             color: #e03131;
@@ -276,6 +305,27 @@ try {
             color: #2d3436;
             margin-bottom: 15px;
             font-weight: 600;
+        }
+        .product-attributes {
+            margin-top: 20px;
+        }
+        .product-attributes ul {
+            list-style: none;
+            padding: 0;
+        }
+        .product-attributes li {
+            font-size: 16px;
+            color: #2d3436;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+        .product-attributes li::before {
+            content: '\f058';
+            font-family: 'Font Awesome 5 Free';
+            font-weight: 900;
+            color: #e03131;
+            margin-right: 10px;
         }
         .add-to-cart-form {
             display: flex;
@@ -432,10 +482,10 @@ try {
             background: #f8f9fa;
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            display: none; /* Ẩn form mặc định */
+            display: none;
         }
         .reply-form.active {
-            display: block; /* Hiển thị khi được kích hoạt */
+            display: block;
         }
         .reply-form h4 {
             font-size: 22px;
@@ -640,6 +690,9 @@ try {
             .product-details h2 {
                 font-size: 26px;
             }
+            .product-price .flash-sale-price {
+                font-size: 30px;
+            }
             .product-price .current-price {
                 font-size: 28px;
             }
@@ -677,6 +730,9 @@ try {
             .product-details h2 {
                 font-size: 22px;
             }
+            .product-price .flash-sale-price {
+                font-size: 26px;
+            }
             .product-price .current-price {
                 font-size: 24px;
             }
@@ -708,7 +764,7 @@ try {
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="/2/public">Trang chủ</a></li>
-            <li class="breadcrumb-item"><a href="/2/public/pages/product.php">Sản phẩm</a></li>
+            <li class="breadcrumb-item"><a href="/2/public/pages/product">Sản phẩm</a></li>
             <li class="breadcrumb-item active" aria-current="page"><?php echo htmlspecialchars($product['name'], ENT_QUOTES); ?></li>
         </ol>
     </nav>
@@ -736,6 +792,12 @@ try {
                 <div class="product-details">
                     <h2><?php echo htmlspecialchars($product['name'], ENT_QUOTES); ?></h2>
                     <div class="product-price">
+                        <?php if ($is_flash_sale_active): ?>
+                            <span class="flash-sale-price">
+                                <?php echo number_format($product['sale_price'], 0, ',', '.'); ?>đ
+                                <span class="end-time">(Kết thúc: <?php echo date('d/m/Y H:i', strtotime($product['end_time'])); ?>)</span>
+                            </span>
+                        <?php endif; ?>
                         <span class="current-price"><?php echo number_format($product['current_price'], 0, ',', '.'); ?>đ</span>
                         <?php if ($product['original_price'] > $product['current_price']): ?>
                             <span class="original-price"><?php echo number_format($product['original_price'], 0, ',', '.'); ?>đ</span>
@@ -747,6 +809,16 @@ try {
                     <div class="product-description">
                         <h3>Mô tả</h3>
                         <?php echo $purifier->purify($product['description']); ?>
+                        <?php if (!empty($product_attributes)): ?>
+                            <div class="product-attributes">
+                                <h4>Thuộc tính</h4>
+                                <ul>
+                                    <?php foreach ($product_attributes as $attr): ?>
+                                        <li><?php echo htmlspecialchars($attr['name'], ENT_QUOTES); ?>: <?php echo htmlspecialchars($attr['value'], ENT_QUOTES); ?></li>
+                                    <?php endforeach; ?>
+                                </ul>
+                            </div>
+                        <?php endif; ?>
                     </div>
                     <?php if ($hasDetailedDescription && !empty($product['detailed_description'])): ?>
                         <div class="product-detailed-description">
@@ -766,9 +838,7 @@ try {
         </div>
         <div class="product-content">
             <h3>Thông tin sản phẩm</h3>
-            <div class="product-content">
-                <?php echo $purifier->purify($product['content']); ?>
-            </div>
+            <?php echo $purifier->purify($product['content']); ?>
         </div>
         <div class="reviews-section">
             <h3>Đánh giá khách hàng</h3>
@@ -800,11 +870,9 @@ try {
                                 <?php endforeach; ?>
                             </div>
                         <?php endif; ?>
-                        <!-- Nút toggle hiển thị form phản hồi -->
                         <div class="reply-toggle" data-review-id="<?php echo $review['id']; ?>">
                             <i class="fas fa-comment-dots"></i> Phản hồi
                         </div>
-                        <!-- Form phản hồi (ẩn mặc định) -->
                         <form class="reply-form" id="reply-form-<?php echo $review['id']; ?>" method="POST" action="/2/public/pages/<?php echo htmlspecialchars($product['slug'], ENT_QUOTES); ?>">
                             <h4>Phản hồi</h4>
                             <input type="hidden" name="review_id" value="<?php echo $review['id']; ?>">
@@ -865,7 +933,6 @@ try {
 <?php require_once 'C:/laragon/www/2/public/includes/footer.php'; ?>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 <script>
-    // Toggle hiển thị form phản hồi
     document.querySelectorAll('.reply-toggle').forEach(button => {
         button.addEventListener('click', function() {
             const reviewId = this.getAttribute('data-review-id');
