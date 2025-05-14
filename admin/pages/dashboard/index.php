@@ -10,7 +10,7 @@ $pending_orders = $pdo->query("SELECT COUNT(*) FROM orders WHERE status = 'pendi
 $processing_orders = $pdo->query("SELECT COUNT(*) FROM orders WHERE status = 'processing'")->fetchColumn();
 $delivered_orders = $pdo->query("SELECT COUNT(*) FROM orders WHERE status = 'delivered'")->fetchColumn();
 $cancelled_orders = $pdo->query("SELECT COUNT(*) FROM orders WHERE status = 'cancelled'")->fetchColumn();
-$login_history = $pdo->query("SELECT admin_name, login_time, ip_address FROM admin_logins ORDER BY login_time DESC LIMIT 6")->fetchAll(PDO::FETCH_ASSOC);
+$login_history = $pdo->query("SELECT admin_name, login_time, ip_address FROM admin_logins ORDER BY login_time DESC LIMIT 10")->fetchAll(PDO::FETCH_ASSOC);
 
 // Dữ liệu cho biểu đồ
 $chart_data = $pdo->query("SELECT DATE(created_at) AS day, SUM(total_amount) AS revenue 

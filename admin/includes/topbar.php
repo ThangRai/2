@@ -40,6 +40,10 @@ if ($admin_id) {
 </div>
 
 
+<div class="gtranslate_wrapper"></div>
+<script>window.gtranslateSettings = {"default_language":"vi","native_language_names":true,"detect_browser_language":true,"wrapper_selector":".gtranslate_wrapper","flag_size":24,"flag_style":"3d"}</script>
+<script src="https://cdn.gtranslate.net/widgets/latest/popup.js" defer></script>
+
 
     <!-- Ô tìm kiếm -->
     <form class="container search-container">
@@ -295,18 +299,14 @@ updateCountdown();
 // Cập nhật đồng hồ hiện tại (giờ, phút, giây)
 function updateClock() {
     const now = new Date();
-    
-    // Lấy tên ngày (thứ)
-    const daysOfWeek = ["Chủ nhật", "Thứ hai", "Thứ ba", "Thứ tư", "Thứ năm", "Thứ sáu", "Thứ bảy"];
-    const dayName = daysOfWeek[now.getDay()];
 
     const hours = String(now.getHours()).padStart(2, '0');
     const minutes = String(now.getMinutes()).padStart(2, '0');
     const seconds = String(now.getSeconds()).padStart(2, '0');
-    
-    // Hiển thị ngày + giờ
-    document.getElementById('clock').textContent = `${dayName} ${hours}:${minutes}:${seconds}`;
+
+    document.getElementById('clock').textContent = `${hours}:${minutes}:${seconds}`;
 }
+
 setInterval(updateClock, 1000);
 updateClock(); // chạy ngay lần đầu
 
