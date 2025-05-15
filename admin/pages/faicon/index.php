@@ -49,21 +49,12 @@ function build_pagination_url($params) {
 }
 ?>
 
-<!DOCTYPE html>
-<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Font Awesome Icons</title>
     <!-- Bootstrap CSS -->
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet"> -->
     <!-- Font Awesome -->
     <link href="/2/admin/assets/vendor/fontawesome/css/all.min.css" rel="stylesheet">
     <style>
-        .card {
-            background: linear-gradient(145deg, #e6f0fa, #ffffff);
-            border: 1px solid #d1e0ff;
-        }
         .copy-code {
             cursor: pointer;
             background: #f8f9fa;
@@ -90,7 +81,6 @@ function build_pagination_url($params) {
     </style>
 </head>
 <body>
-    <div class="container-fluid">
         <!-- Page Heading -->
         <h1 class="h3 mb-4 text-gray-800">Font Awesome Icons</h1>
         <p class="mb-4">Danh sách icon Font Awesome 5 Free. Nhấp vào mã để copy.</p>
@@ -197,11 +187,10 @@ function build_pagination_url($params) {
                 Đã copy mã icon!
             </div>
         </div>
-    </div>
 
     <!-- jQuery và Bootstrap JS -->
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <!-- <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script> -->
+    <!-- <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script> -->
     <script>
         // Copy mã icon
         document.querySelectorAll('.copy-code').forEach(code => {

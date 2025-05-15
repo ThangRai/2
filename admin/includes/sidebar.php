@@ -49,6 +49,7 @@ $permissions = [
     'quantri' => [1, 4],         // Chỉ super_admin (role 1)
     'activity_logs' => [1, 3],
     'faicon' => [1],
+    'amination' => [1],
     'logout' => [1, 2, 3, 4],    // Tất cả role đều thấy Đăng xuất
 ];
 
@@ -289,6 +290,15 @@ function hasAccess($page, $role_id, $permissions) {
         <a class="nav-link collapsed" href="index.php?page=faicon">
             <i class="fas fa-fw fa-align-justify"></i>
             <span>Awesome icon</span>
+        </a>
+    </li>
+    <?php endif; ?>
+
+    <?php if (hasAccess('amination', $_SESSION['role_id'], $permissions)): ?>
+    <li class="nav-item <?php echo $page == 'amination' ? 'active' : ''; ?>">
+        <a class="nav-link collapsed" href="index.php?page=amination">
+            <i class="fas fa-fw fa-film"></i>
+            <span>Amination</span>
         </a>
     </li>
     <?php endif; ?>

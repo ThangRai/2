@@ -191,8 +191,61 @@ $revenues = array_map('floatval', array_column($chart_data, 'revenue'));
 
 </div>
 
+<!-- New Row for Inline Calendar and Clock -->
+<div class="row">
+    <div class="col col-12 col-md-4">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Lịch</h6>
+            </div>
+            <div class="card-body-lich" style="padding: 20px 10px;">
+                <div id="inlineCalendar"></div>
+                <input type="hidden" id="selectedDate" value="<?php echo date('d/m/Y'); ?>">
+                <div class="text-center mt-2">
+                    <strong>Ngày được chọn: </strong><span id="displaySelectedDate"><?php echo date('d/m/Y'); ?></span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col col-12 col-md-8">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Bản đồ</h6>
+            </div>
+            <div class="card-body">
+                <div class="text-center">
+                    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3894.832426986445!2d108.30534958539566!3d12.527257892891637!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x317193b603af7f3b%3A0x71c85315931a80b0!2zVGjhuq9uZyBSYWk!5e0!3m2!1svi!2s!4v1744961247747!5m2!1svi!2s" width="100%" height="320" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Flatpickr CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+<!-- Flatpickr JS -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Flatpickr in inline mode
+    flatpickr("#inlineCalendar", {
+        inline: true, // Display calendar directly
+        dateFormat: "d/m/Y",
+        enableTime: false,
+        locale: {
+            firstDayOfWeek: 1 // Start week on Monday
+        },
+        defaultDate: "<?php echo date('d/m/Y'); ?>",
+        onChange: function(selectedDates, dateStr) {
+            // Update hidden input and display selected date
+            document.getElementById('selectedDate').value = dateStr;
+            document.getElementById('displaySelectedDate').textContent = dateStr;
+        }
+    });
+
+    // Chart.js for Revenue Chart
     console.log('Chart loaded:', typeof Chart);
     var ctx = document.getElementById('revenueChart');
     console.log('Canvas found:', !!ctx);
@@ -230,5 +283,19 @@ document.addEventListener('DOMContentLoaded', function() {
     } else {
         console.error('Canvas or Chart.js not found');
     }
+
+    // Update Clock
+    // function updateClock() {
+    //     const now = new Date();
+    //     const hours = String(now.getHours()).padStart(2, '0');
+    //     const minutes = String(now.getMinutes()).padStart(2, '0');
+    //     const seconds = String(now.getSeconds()).padStart(2, '0');
+    //     document.getElementById('currentTime').textContent = `${hours}:${minutes}:${seconds}`;
+    // }
+
+    // // Initial call to display time
+    // updateClock();
+    // // Update time every second
+    // setInterval(updateClock, 1000);
 });
 </script>
