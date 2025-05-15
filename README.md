@@ -1,1 +1,1 @@
-![Chi tiết](admin/uploads/mota/info.jpg)
+![Chi tiết](admin/uploads/mota/info1.jpg)
