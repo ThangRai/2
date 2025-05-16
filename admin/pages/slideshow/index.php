@@ -177,9 +177,11 @@ if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
     exit;
 }
 
-// Lấy thông tin slide để sửa
+// Lấy thông tin slide để sửa hoặc thêm
 $edit_slide = null;
-if (isset($_GET['edit']) && is_numeric($_GET['edit']) && !isset($_POST['add_slide']) && !isset($_POST['edit_slide'])) {
+if (isset($_GET['action']) && $_GET['action'] === 'add' && !isset($_POST['add_slide']) && !isset($_POST['edit_slide'])) {
+    $edit_slide = false; // Thêm mới
+} elseif (isset($_GET['edit']) && is_numeric($_GET['edit']) && !isset($_POST['add_slide']) && !isset($_POST['edit_slide'])) {
     $edit_id = $_GET['edit'];
     $stmt = $pdo->prepare("SELECT * FROM slides WHERE id = ?");
     $stmt->execute([$edit_id]);
@@ -198,9 +200,11 @@ $slides = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 <div class="d-sm-flex align-items-center justify-content-between mb-4">
     <h1 class="h3 mb-0 text-gray-800">Quản lý Slideshow</h1>
+    <a href="?page=slideshow&action=add" class="btn btn-primary">Thêm Slide</a>
 </div>
 
 <!-- Form thêm/sửa slide -->
+<?php if ($edit_slide !== null): ?>
 <div class="card shadow mb-4">
     <div class="card-header py-3">
         <h6 class="m-0 font-weight-bold text-primary"><?php echo $edit_slide ? 'Sửa Slide' : 'Thêm Slide'; ?></h6>
@@ -255,12 +259,11 @@ $slides = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 </div>
             </div>
             <button type="submit" name="<?php echo $edit_slide ? 'edit_slide' : 'add_slide'; ?>" class="btn btn-primary"><?php echo $edit_slide ? 'Cập nhật' : 'Thêm Slide'; ?></button>
-            <?php if ($edit_slide): ?>
-                <a href="?page=slideshow" class="btn btn-secondary">Hủy</a>
-            <?php endif; ?>
+            <a href="?page=slideshow" class="btn btn-secondary">Hủy</a>
         </form>
     </div>
 </div>
+<?php endif; ?>
 
 <!-- Bảng danh sách slides -->
 <div class="card shadow mb-4">
@@ -305,8 +308,8 @@ $slides = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 <?php echo $slide['status'] ? '<span class="badge badge-success">Hiển thị</span>' : '<span class="badge badge-secondary">Ẩn</span>'; ?>
                             </td>
                             <td>
-                                <a href="?page=slideshow&edit=<?php echo $slide['id']; ?>" class="btn btn-sm btn-warning">Sửa</a>
-                                <a href="?page=slideshow&delete=<?php echo $slide['id']; ?>" class="btn btn-sm btn-danger" onclick="return confirm('Bạn có chắc muốn xóa?')">Xóa</a>
+                                <a href="?page=slideshow&edit=<?php echo $slide['id']; ?>" class="btn btn-sm btn-warning"><i class="fas fa-edit"></i> Sửa</a>
+                                <a href="?page=slideshow&delete=<?php echo $slide['id']; ?>" class="btn btn-sm btn-danger" onclick="return confirm('Bạn có chắc muốn xóa?')"><i class="fas fa-trash"></i> Xóa</a>
                             </td>
                         </tr>
                     <?php endforeach; ?>

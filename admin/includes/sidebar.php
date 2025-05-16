@@ -179,7 +179,7 @@ function hasAccess($page, $role_id, $permissions) {
         <?php if (hasAccess('service', $_SESSION['role_id'], $permissions)): ?>
     <li class="nav-item <?php echo $page == 'service' ? 'active' : ''; ?>">
         <a class="nav-link" href="index.php?page=service">
-            <i class="fas fa-concierge-bell"></i>
+            <i class="fas fa-fw fa-concierge-bell"></i>
             <span>Dịch vụ</span>
         </a>
     </li>
@@ -188,7 +188,7 @@ function hasAccess($page, $role_id, $permissions) {
     <?php if (hasAccess('project', $_SESSION['role_id'], $permissions)): ?>
     <li class="nav-item <?php echo $page == 'project' ? 'active' : ''; ?>">
         <a class="nav-link" href="index.php?page=project">
-            <i class="fas fa-folder"></i>
+            <i class="fas fa-fw fa-folder"></i>
             <span>Dự án</span>
         </a>
     </li>
@@ -252,7 +252,7 @@ function hasAccess($page, $role_id, $permissions) {
     <?php if (hasAccess('question', $_SESSION['role_id'], $permissions)): ?>
     <li class="nav-item <?php echo $page == 'question' ? 'active' : ''; ?>">
         <a class="nav-link" href="index.php?page=question">
-            <i class="fas fa-question-circle"></i>
+            <i class="fas fa-fw fa-question-circle"></i>
             <span>Hỏi đáp</span>
         </a>
     </li>

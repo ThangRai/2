@@ -4,9 +4,9 @@ ob_start(); // Bắt đầu output buffering
 require_once 'C:/laragon/www/2/admin/config/db_connect.php';
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
-    require 'C:/laragon/www/2/public/includes/PHPMailer/src/Exception.php';
-    require 'C:/laragon/www/2/public/includes/PHPMailer/src/PHPMailer.php';
-    require 'C:/laragon/www/2/public/includes/PHPMailer/src/SMTP.php';
+require 'C:/laragon/www/2/public/includes/PHPMailer/src/Exception.php';
+require 'C:/laragon/www/2/public/includes/PHPMailer/src/PHPMailer.php';
+require 'C:/laragon/www/2/public/includes/PHPMailer/src/SMTP.php';
 
 // Kiểm tra đăng nhập
 if (!isset($_SESSION['admin_id'])) {
@@ -14,24 +14,23 @@ if (!isset($_SESSION['admin_id'])) {
     exit;
 }
 
-// Kiểm tra quyền truy cập (giữ nguyên mã gốc, bỏ comment nếu cần)
-// $stmt = $pdo->prepare("SELECT role_id FROM admins WHERE id = ?");
-// $stmt->execute([$_SESSION['admin_id']]);
-// $admin = $stmt->fetch(PDO::FETCH_ASSOC);
-
-// $allowed_roles = [1]; // super_admin (1)
-// if (!$admin || !in_array($admin['role_id'], $allowed_roles)) {
-//     error_log('Access denied for admin_id: ' . ($_SESSION['admin_id'] ?? 'unknown') . ', role_id: ' . ($admin['role_id'] ?? 'none'));
-//     $_SESSION['message'] = ['type' => 'error', 'text' => 'Bạn không có quyền truy cập trang này.'];
-//     echo '<script>window.location.href="index.php?page=dashboard";</script>';
-//     exit;
-// }
+// Hàm lấy cấu hình email từ bảng settings
+function getEmailSettings($pdo) {
+    $settings = [];
+    $stmt = $pdo->query("SELECT name, value FROM settings WHERE name IN ('smtp_host', 'smtp_username', 'smtp_password', 'smtp_port', 'smtp_from', 'smtp_from_name')");
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $settings[$row['name']] = $row['value'];
+    }
+    return $settings;
+}
 
 // Lấy danh sách roles để hiển thị trong form
 $stmt = $pdo->query("SELECT id, name FROM roles");
 $roles = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Xử lý gửi thông báo nội bộ
+// Lấy action từ URL
+$action = isset($_GET['action']) ? $_GET['action'] : 'list';
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_notification'])) {
     $admin_ids = $_POST['admin_ids'] ?? [];
     $subject = trim($_POST['subject'] ?? '');
@@ -50,68 +49,83 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_notification']))
     }
 
     if (empty($errors)) {
-        // Lấy cấu hình SMTP từ bảng settings
-        $smtp_settings = [];
-        $stmt = $pdo->query("SELECT name, value FROM settings WHERE name LIKE 'smtp_%'");
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $smtp_settings[$row['name']] = $row['value'];
+        // Lấy danh sách admin được chọn
+        $placeholders = implode(',', array_fill(0, count($admin_ids), '?'));
+        $stmt = $pdo->prepare("SELECT id, name, email FROM admins WHERE id IN ($placeholders)");
+        $stmt->execute($admin_ids);
+        $selected_admins = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Lấy cấu hình email từ bảng settings
+        $email_settings = getEmailSettings($pdo);
+
+        // Kiểm tra xem cấu hình có đầy đủ không
+        $required_settings = ['smtp_host', 'smtp_username', 'smtp_password', 'smtp_port', 'smtp_from', 'smtp_from_name'];
+        foreach ($required_settings as $key) {
+            if (empty($email_settings[$key])) {
+                $errors[] = "Thiếu cấu hình email: $key";
+            }
         }
 
-        if (empty($smtp_settings['smtp_host']) || empty($smtp_settings['smtp_port']) || empty($smtp_settings['smtp_username']) || empty($smtp_settings['smtp_from'])) {
-            $errors[] = 'Cấu hình SMTP không đầy đủ';
-        } else {
-            // Lấy danh sách email của admin được chọn
-            $placeholders = str_repeat('?,', count($admin_ids) - 1) . '?';
-            $stmt = $pdo->prepare("SELECT id, name, email FROM admins WHERE id IN ($placeholders)");
-            $stmt->execute($admin_ids);
-            $selected_admins = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-            // Gửi email bằng PHPMailer
+        if (empty($errors)) {
             $mail = new PHPMailer(true);
             try {
-                // Cấu hình SMTP
+                $mail->SMTPDebug = 3; // Tăng mức debug
+                $mail->Debugoutput = 'echo'; // In lỗi ra màn hình
                 $mail->isSMTP();
-                $mail->Host = $smtp_settings['smtp_host'];
+                $mail->Host = $email_settings['smtp_host'];
                 $mail->SMTPAuth = true;
-                $mail->Username = $smtp_settings['smtp_username'];
-                $mail->Password = $smtp_settings['smtp_password'];
-                $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
-                $mail->Port = $smtp_settings['smtp_port'];
+                $mail->Username = $email_settings['smtp_username'];
+                $mail->Password = $email_settings['smtp_password'];
+                $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS; // Mặc định ssl vì cổng 465
+                $mail->Port = (int) $email_settings['smtp_port'];
+
+                // Tạm thời tắt xác minh SSL (xóa sau khi cấu hình openssl.cafile)
+                $mail->SMTPOptions = [
+                    'ssl' => [
+                        'verify_peer' => false,
+                        'verify_peer_name' => false,
+                        'allow_self_signed' => true
+                    ]
+                ];
 
                 $mail->CharSet = 'UTF-8';
                 $mail->Encoding = 'base64';
+                $mail->setFrom($email_settings['smtp_from'], $email_settings['smtp_from_name']);
 
-                // Người gửi
-                $mail->setFrom($smtp_settings['smtp_from'], $smtp_settings['smtp_from_name'] ?? 'Admin System');
-                $mail->CharSet = 'UTF-8';
-
-                // Gửi email cho từng admin
                 foreach ($selected_admins as $admin) {
-                    $mail->addAddress($admin['email'], $admin['name']);
+                    $email = $admin['email'];
+                    if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                        $errors[] = "Email không hợp lệ hoặc trống: " . ($admin['name'] ?? 'ID ' . $admin['id']);
+                        continue;
+                    }
+                    $mail->addAddress($email, $admin['name']);
                     $mail->Subject = $subject;
                     $mail->Body = nl2br(htmlspecialchars($message_content));
                     $mail->isHTML(true);
 
                     if (!$mail->send()) {
-                        $errors[] = "Không thể gửi email tới {$admin['email']}";
+                        $errors[] = "Không thể gửi email tới $email: " . $mail->ErrorInfo;
                     }
                     $mail->clearAddresses();
                 }
 
                 if (empty($errors)) {
                     $_SESSION['message'] = ['type' => 'success', 'text' => 'Gửi thông báo thành công'];
+                } else {
+                    $_SESSION['message'] = ['type' => 'error', 'text' => implode('<br>', $errors)];
                 }
             } catch (Exception $e) {
-                error_log('Send notification error: ' . $mail->ErrorInfo);
-                $errors[] = 'Lỗi khi gửi thông báo: ' . $mail->ErrorInfo;
+                $_SESSION['message'] = ['type' => 'error', 'text' => 'Lỗi khi gửi thông báo: ' . $mail->ErrorInfo];
+                error_log(date('Y-m-d H:i:s') . " PHPMailer Error: " . $mail->ErrorInfo . "\n", 3, 'C:/laragon/logs/email_errors.log');
             }
+        } else {
+            $_SESSION['message'] = ['type' => 'error', 'text' => implode('<br>', $errors)];
         }
-    }
-
-    if (!empty($errors)) {
+    } else {
         $_SESSION['message'] = ['type' => 'error', 'text' => implode('<br>', $errors)];
     }
-    echo '<script>window.location.href="?page=quantri";</script>';
+
+    echo '<script>window.location.href="?page=quantri&action=notify";</script>';
     exit;
 }
 
@@ -128,7 +142,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_admin'])) {
 
     $errors = [];
 
-    // Validate
     if (empty($name)) {
         $errors[] = 'Họ và Tên không được để trống';
     }
@@ -147,7 +160,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_admin'])) {
     if (empty($role_id) || !is_numeric($role_id)) {
         $errors[] = 'Vui lòng chọn vai trò';
     } else {
-        // Kiểm tra role_id có tồn tại
         $stmt = $pdo->prepare("SELECT id FROM roles WHERE id = ?");
         $stmt->execute([$role_id]);
         if (!$stmt->fetch()) {
@@ -155,14 +167,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_admin'])) {
         }
     }
 
-    // Kiểm tra email và username trùng
     $stmt = $pdo->prepare("SELECT id FROM admins WHERE email = ? OR username = ?");
     $stmt->execute([$email, $username]);
     if ($stmt->fetch()) {
         $errors[] = 'Email hoặc tên đăng nhập đã tồn tại';
     }
 
-    // Xử lý ảnh đại diện
     $avatar = null;
     if (isset($_FILES['avatar']) && $_FILES['avatar']['error'] === UPLOAD_ERR_OK) {
         $file = $_FILES['avatar'];
@@ -187,7 +197,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_admin'])) {
         }
     }
 
-    // Lưu message trước khi chuyển hướng
     if (!empty($errors)) {
         $_SESSION['message'] = ['type' => 'error', 'text' => implode('<br>', $errors)];
     } else {
@@ -205,8 +214,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_admin'])) {
         }
     }
 
-    // Chuyển hướng bằng JS
-    echo '<script>window.location.href="?page=quantri";</script>';
+    echo '<script>window.location.href="?page=quantri&action=add";</script>';
     exit;
 }
 
@@ -224,7 +232,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_admin'])) {
 
     $errors = [];
 
-    // Validate
     if (empty($edit_id) || !is_numeric($edit_id)) {
         $errors[] = 'ID admin không hợp lệ';
     }
@@ -249,7 +256,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_admin'])) {
     if (empty($role_id) || !is_numeric($role_id)) {
         $errors[] = 'Vui lòng chọn vai trò';
     } else {
-        // Kiểm tra role_id có tồn tại
         $stmt = $pdo->prepare("SELECT id FROM roles WHERE id = ?");
         $stmt->execute([$role_id]);
         if (!$stmt->fetch()) {
@@ -257,14 +263,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_admin'])) {
         }
     }
 
-    // Kiểm tra email và username trùng
     $stmt = $pdo->prepare("SELECT id FROM admins WHERE (email = ? OR username = ?) AND id != ?");
     $stmt->execute([$email, $username, $edit_id]);
     if ($stmt->fetch()) {
         $errors[] = 'Email hoặc tên đăng nhập đã tồn tại';
     }
 
-    // Lấy thông tin admin hiện tại
     $stmt = $pdo->prepare("SELECT avatar FROM admins WHERE id = ?");
     $stmt->execute([$edit_id]);
     $current_admin = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -274,7 +278,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_admin'])) {
         $avatar = $current_admin['avatar'];
     }
 
-    // Xử lý ảnh đại diện
     if (isset($_FILES['avatar']) && $_FILES['avatar']['error'] === UPLOAD_ERR_OK) {
         $file = $_FILES['avatar'];
         $allowed = ['jpg', 'jpeg', 'png'];
@@ -284,7 +287,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_admin'])) {
         } elseif ($file['size'] > 2 * 1024 * 1024) {
             $errors[] = 'Ảnh đại diện không được lớn hơn 2MB';
         } else {
-$avatar_name = 'admin_' . $edit_id . '_' . time() . '.' . $ext;
+            $avatar_name = 'admin_' . $edit_id . '_' . time() . '.' . $ext;
             $upload_dir = 'uploads/avatars/';
             if (!is_dir($upload_dir)) {
                 mkdir($upload_dir, 0777, true);
@@ -301,7 +304,6 @@ $avatar_name = 'admin_' . $edit_id . '_' . time() . '.' . $ext;
         }
     }
 
-    // Debug và lưu message
     if (!empty($errors)) {
         $_SESSION['message'] = ['type' => 'error', 'text' => implode('<br>', $errors)];
     } else {
@@ -324,8 +326,7 @@ $avatar_name = 'admin_' . $edit_id . '_' . time() . '.' . $ext;
         }
     }
 
-    // Chuyển hướng bằng JS
-    echo '<script>window.location.href="?page=quantri";</script>';
+    echo '<script>window.location.href="?page=quantri&action=add";</script>';
     exit;
 }
 
@@ -352,8 +353,7 @@ if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
     } else {
         $_SESSION['message'] = ['type' => 'error', 'text' => 'Không thể xóa tài khoản của chính bạn'];
     }
-    // Chuyển hướng bằng JS
-    echo '<script>window.location.href="?page=quantri";</script>';
+    echo '<script>window.location.href="?page=quantri&action=list";</script>';
     exit;
 }
 
@@ -367,12 +367,12 @@ if (isset($_GET['edit']) && is_numeric($_GET['edit']) && !isset($_POST['add_admi
         $edit_admin = $stmt->fetch(PDO::FETCH_ASSOC);
         if (!$edit_admin) {
             $_SESSION['message'] = ['type' => 'error', 'text' => 'Admin không tồn tại'];
-            echo '<script>window.location.href="?page=quantri";</script>';
+            echo '<script>window.location.href="?page=quantri&action=list";</script>';
             exit;
         }
     } else {
         $_SESSION['message'] = ['type' => 'error', 'text' => 'Không thể sửa tài khoản chính'];
-        echo '<script>window.location.href="?page=quantri";</script>';
+        echo '<script>window.location.href="?page=quantri&action=list";</script>';
         exit;
     }
 }
@@ -391,23 +391,46 @@ $admins = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <h1 class="h3 mb-0 text-gray-800">Quản trị</h1>
 </div>
 
+<!-- Navigation Buttons -->
+<div class="mb-4">
+    <a href="?page=quantri&action=notify" class="btn btn-primary mr-2">Gửi Thông Báo</a>
+    <a href="?page=quantri&action=add" class="btn btn-primary">Thêm Admin</a>
+</div>
+
+<?php if ($action === 'notify'): ?>
 <!-- Form gửi thông báo nội bộ -->
 <div class="card shadow mb-4">
     <div class="card-header py-3">
         <h6 class="m-0 font-weight-bold text-primary">Gửi Thông Báo Nội Bộ</h6>
     </div>
     <div class="card-body">
+        <?php if (isset($_SESSION['message'])): ?>
+            <script>
+                Swal.fire({
+                    icon: '<?php echo $_SESSION['message']['type']; ?>',
+                    title: '<?php echo $_SESSION['message']['type'] === 'success' ? 'Thành công' : 'Lỗi'; ?>',
+                    html: '<?php echo htmlspecialchars($_SESSION['message']['text']); ?>',
+                    confirmButtonText: 'OK'
+                });
+            </script>
+            <?php unset($_SESSION['message']); ?>
+        <?php endif; ?>
         <form method="POST">
             <div class="form-group">
-                <label for="admin_ids">Chọn Nhân Viên <span class="text-danger">*</span></label>
-                <select class="form-control" id="admin_ids" name="admin_ids[]" multiple required>
+                <label>Chọn Nhân Viên <span class="text-danger">*</span></label>
+                <div class="row">
                     <?php foreach ($admins as $admin): ?>
-                        <option value="<?php echo htmlspecialchars($admin['id']); ?>">
-                            <?php echo htmlspecialchars($admin['name'] . ' (' . $admin['email'] . ')'); ?>
-                        </option>
+                        <div class="col-md-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="admin_ids[]" id="admin_<?php echo htmlspecialchars($admin['id']); ?>" value="<?php echo htmlspecialchars($admin['id']); ?>">
+                                <label class="form-check-label" for="admin_<?php echo htmlspecialchars($admin['id']); ?>">
+                                    <?php echo htmlspecialchars($admin['name'] . ' (' . $admin['email'] . ')'); ?>
+                                </label>
+                            </div>
+                        </div>
                     <?php endforeach; ?>
-                </select>
-                <small class="form-text text-muted">Giữ Ctrl để chọn nhiều nhân viên.</small>
+                </div>
+                <small class="form-text text-muted">Chọn các nhân viên để gửi thông báo.</small>
             </div>
             <div class="form-group">
                 <label for="subject">Tiêu đề <span class="text-danger">*</span></label>
@@ -422,6 +445,7 @@ $admins = $stmt->fetchAll(PDO::FETCH_ASSOC);
     </div>
 </div>
 
+<?php elseif ($action === 'add' || isset($_GET['edit'])): ?>
 <!-- Form thêm/sửa admin -->
 <div class="card shadow mb-4">
     <div class="card-header py-3">
@@ -439,7 +463,6 @@ $admins = $stmt->fetchAll(PDO::FETCH_ASSOC);
             </script>
             <?php unset($_SESSION['message']); ?>
         <?php endif; ?>
-
         <form method="POST" enctype="multipart/form-data">
             <?php if ($edit_admin): ?>
                 <input type="hidden" name="edit_id" value="<?php echo htmlspecialchars($edit_admin['id']); ?>">
@@ -499,18 +522,30 @@ $admins = $stmt->fetchAll(PDO::FETCH_ASSOC);
             </div>
             <button type="submit" name="<?php echo $edit_admin ? 'edit_admin' : 'add_admin'; ?>" class="btn btn-primary"><?php echo $edit_admin ? 'Cập nhật' : 'Thêm Admin'; ?></button>
             <?php if ($edit_admin): ?>
-                <a href="?page=quantri" class="btn btn-secondary">Hủy</a>
+                <a href="?page=quantri&action=list" class="btn btn-secondary">Hủy</a>
             <?php endif; ?>
         </form>
     </div>
 </div>
 
+<?php else: ?>
 <!-- Bảng danh sách admin -->
 <div class="card shadow mb-4">
     <div class="card-header py-3">
         <h6 class="m-0 font-weight-bold text-primary">Danh sách Admin</h6>
     </div>
     <div class="card-body">
+        <?php if (isset($_SESSION['message'])): ?>
+            <script>
+                Swal.fire({
+                    icon: '<?php echo $_SESSION['message']['type']; ?>',
+                    title: '<?php echo $_SESSION['message']['type'] === 'success' ? 'Thành công' : 'Lỗi'; ?>',
+                    html: '<?php echo htmlspecialchars($_SESSION['message']['text']); ?>',
+                    confirmButtonText: 'OK'
+                });
+            </script>
+            <?php unset($_SESSION['message']); ?>
+        <?php endif; ?>
         <div class="table-responsive">
             <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
                 <thead>
@@ -544,8 +579,8 @@ $admins = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 <?php endif; ?>
                             </td>
                             <td>
-                                <a href="?page=quantri&edit=<?php echo $admin['id']; ?>" class="btn btn-sm btn-warning">Sửa</a>
-                                <a href="?page=quantri&delete=<?php echo $admin['id']; ?>" class="btn btn-sm btn-danger" onclick="return confirm('Bạn có chắc muốn xóa?')">Xóa</a>
+                                <a href="?page=quantri&action=add&edit=<?php echo $admin['id']; ?>" class="btn btn-sm btn-warning">Sửa</a>
+                                <a href="?page=quantri&action=list&delete=<?php echo $admin['id']; ?>" class="btn btn-sm btn-danger" onclick="return confirm('Bạn có chắc muốn xóa?')">Xóa</a>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -554,5 +589,6 @@ $admins = $stmt->fetchAll(PDO::FETCH_ASSOC);
         </div>
     </div>
 </div>
+<?php endif; ?>
 
 <?php ob_end_flush(); ?>

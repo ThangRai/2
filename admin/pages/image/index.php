@@ -95,8 +95,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             exit;
         }
         // Lấy danh sách ảnh hiện tại
-        $stmt = $pdo->prepare("SELECT filenames FROM images WHERE id = ? AND admin_id = ?");
-        $stmt->execute([$id, $admin_id]);
+        $stmt = $pdo->prepare("SELECT filenames FROM images WHERE id = ?");
+        $stmt->execute([$id]);
         $image = $stmt->fetch(PDO::FETCH_ASSOC);
         $filenames = json_decode($image['filenames'], true) ?: [];
 
@@ -151,8 +151,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $filenames = array_merge($filenames, $_SESSION['temp_filenames']);
                 unset($_SESSION['temp_filenames']);
             }
-            $stmt = $pdo->prepare("UPDATE images SET title = ?, description = ?, filenames = ?, status = ?, updated_at = NOW() WHERE id = ? AND admin_id = ?");
-            $stmt->execute([$title, $description, json_encode($filenames), $status, $id, $admin_id]);
+            $stmt = $pdo->prepare("UPDATE images SET title = ?, description = ?, filenames = ?, status = ?, updated_at = NOW() WHERE id = ?");
+            $stmt->execute([$title, $description, json_encode($filenames), $status, $id]);
             // Ghi log
             $log_stmt = $pdo->prepare("INSERT INTO activity_logs (admin_id, role_id, action, page, target_id, details, ip_address) VALUES (?, ?, ?, ?, ?, ?, ?)");
             $log_stmt->execute([$admin_id, $role_id, 'Sửa', 'image', $id, "Sửa bản ghi ID: $id, " . count($filenames) . " ảnh", $_SERVER['REMOTE_ADDR']]);
@@ -162,8 +162,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         }
     } elseif ($action === 'delete' && isset($_POST['id'])) {
         $id = (int)$_POST['id'];
-        $stmt = $pdo->prepare("SELECT filenames FROM images WHERE id = ? AND admin_id = ?");
-        $stmt->execute([$id, $admin_id]);
+        $stmt = $pdo->prepare("SELECT filenames FROM images WHERE id = ?");
+        $stmt->execute([$id]);
         $image = $stmt->fetch(PDO::FETCH_ASSOC);
         if ($image) {
             $filenames = json_decode($image['filenames'], true) ?: [];
@@ -173,8 +173,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     unlink($file_path);
                 }
             }
-            $stmt = $pdo->prepare("DELETE FROM images WHERE id = ? AND admin_id = ?");
-            $stmt->execute([$id, $admin_id]);
+            $stmt = $pdo->prepare("DELETE FROM images WHERE id = ?");
+            $stmt->execute([$id]);
             // Ghi log
             $log_stmt = $pdo->prepare("INSERT INTO activity_logs (admin_id, role_id, action, page, target_id, details, ip_address) VALUES (?, ?, ?, ?, ?, ?, ?)");
             $log_stmt->execute([$admin_id, $role_id, 'Xóa', 'image', $id, "Xóa bản ghi: " . count($filenames) . " ảnh", $_SERVER['REMOTE_ADDR']]);
@@ -182,13 +182,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         }
     } elseif ($action === 'toggle' && isset($_POST['id'])) {
         $id = (int)$_POST['id'];
-        $stmt = $pdo->prepare("SELECT status FROM images WHERE id = ? AND admin_id = ?");
-        $stmt->execute([$id, $admin_id]);
+        $stmt = $pdo->prepare("SELECT status FROM images WHERE id = ?");
+        $stmt->execute([$id]);
         $image = $stmt->fetch(PDO::FETCH_ASSOC);
         if ($image) {
             $new_status = $image['status'] === 'active' ? 'inactive' : 'active';
-            $stmt = $pdo->prepare("UPDATE images SET status = ?, updated_at = NOW() WHERE id = ? AND admin_id = ?");
-            $stmt->execute([$new_status, $id, $admin_id]);
+            $stmt = $pdo->prepare("UPDATE images SET status = ?, updated_at = NOW() WHERE id = ?");
+            $stmt->execute([$new_status, $id]);
             // Ghi log
             $log_stmt = $pdo->prepare("INSERT INTO activity_logs (admin_id, role_id, action, page, target_id, details, ip_address) VALUES (?, ?, ?, ?, ?, ?, ?)");
             $log_stmt->execute([$admin_id, $role_id, 'Ẩn/Hiện', 'image', $id, "Chuyển trạng thái bản ghi ID: $id sang $new_status", $_SERVER['REMOTE_ADDR']]);
@@ -284,9 +284,6 @@ $roles = $role_stmt->fetchAll(PDO::FETCH_ASSOC);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản lý thư viện ảnh</title>
-    <!-- <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet"> -->
-    <!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet"> -->
-    <!-- <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet"> -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/dropzone.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
@@ -431,210 +428,225 @@ $roles = $role_stmt->fetchAll(PDO::FETCH_ASSOC);
         <?php unset($_SESSION['message']); ?>
     <?php endif; ?>
 
-    <!-- <div class="container-fluid"> -->
-        <?php if (isset($_GET['action']) && ($_GET['action'] === 'add' || $_GET['action'] === 'edit')): ?>
-            <?php
-            $edit_mode = $_GET['action'] === 'edit' && isset($_GET['id']);
-            $edit_id = $edit_mode ? (int)$_GET['id'] : 0;
-            $edit_data = ['title' => '', 'description' => '', 'status' => 'active', 'filenames' => []];
-            if ($edit_mode) {
-                $stmt = $pdo->prepare("SELECT * FROM images WHERE id = ? AND admin_id = ?");
-                $stmt->execute([$edit_id, $admin_id]);
-                $edit_data = $stmt->fetch(PDO::FETCH_ASSOC);
-                $edit_data['filenames'] = json_decode($edit_data['filenames'], true) ?: [];
+    <?php if (isset($_GET['action']) && ($_GET['action'] === 'add' || $_GET['action'] === 'edit')): ?>
+        <?php
+        $edit_mode = $_GET['action'] === 'edit' && isset($_GET['id']);
+        $edit_id = $edit_mode ? (int)$_GET['id'] : 0;
+        // Khởi tạo giá trị mặc định cho $edit_data
+        $edit_data = ['title' => '', 'description' => '', 'status' => 'active', 'filenames' => []];
+
+        if ($edit_mode) {
+            try {
+                $stmt = $pdo->prepare("SELECT * FROM images WHERE id = ?");
+                $stmt->execute([$edit_id]);
+                $result = $stmt->fetch(PDO::FETCH_ASSOC);
+                if ($result) {
+                    // Nếu tìm thấy bản ghi, gán dữ liệu vào $edit_data
+                    $edit_data = $result;
+                    $edit_data['filenames'] = !empty($edit_data['filenames']) ? json_decode($edit_data['filenames'], true) ?: [] : [];
+                } else {
+                    // Nếu không tìm thấy bản ghi, hiển thị thông báo lỗi và chuyển hướng
+                    $_SESSION['message'] = ['type' => 'error', 'text' => 'Bản ghi không tồn tại.'];
+                    echo '<script>window.location.href="index.php?page=image";</script>';
+                    exit;
+                }
+            } catch (PDOException $e) {
+                $_SESSION['message'] = ['type' => 'error', 'text' => 'Lỗi SQL: ' . $e->getMessage()];
+                echo '<script>window.location.href="index.php?page=image";</script>';
+                exit;
             }
-            ?>
-            <!-- Form thêm/sửa ảnh với Dropzone -->
-            <h1 class="h3 mb-4 text-gray-800"><?php echo $edit_mode ? 'Sửa bản ghi ảnh' : 'Thêm ảnh mới'; ?></h1>
-            <div class="upload-form">
-                <form action="" method="POST" class="dropzone" id="imageUpload" enctype="multipart/form-data">
-                    <input type="hidden" name="action" value="<?php echo $edit_mode ? 'edit' : 'add'; ?>">
-                    <?php if ($edit_mode): ?>
-                        <input type="hidden" name="id" value="<?php echo $edit_id; ?>">
-                    <?php endif; ?>
+        }
+        ?>
+        <!-- Form thêm/sửa ảnh với Dropzone -->
+        <h1 class="h3 mb-4 text-gray-800"><?php echo $edit_mode ? 'Sửa bản ghi ảnh' : 'Thêm ảnh mới'; ?></h1>
+        <div class="upload-form">
+            <form action="" method="POST" class="dropzone" id="imageUpload" enctype="multipart/form-data">
+                <input type="hidden" name="action" value="<?php echo $edit_mode ? 'edit' : 'add'; ?>">
+                <?php if ($edit_mode): ?>
+                    <input type="hidden" name="id" value="<?php echo $edit_id; ?>">
+                <?php endif; ?>
+                <div class="form-group">
+                    <label for="title">Tiêu đề</label>
+                    <input type="text" name="title" id="title" class="form-control" value="<?php echo htmlspecialchars($edit_data['title'] ?? ''); ?>" required>
+                </div>
+                <div class="form-group">
+                    <label for="description">Mô tả</label>
+                    <textarea name="description" id="description" class="form-control" rows="4"><?php echo htmlspecialchars($edit_data['description'] ?? ''); ?></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="status">Trạng thái</label>
+                    <select name="status" id="status" class="form-control">
+                        <option value="active" <?php echo ($edit_data['status'] ?? 'active') === 'active' ? 'selected' : ''; ?>>Hiển thị</option>
+                        <option value="inactive" <?php echo ($edit_data['status'] ?? 'active') === 'inactive' ? 'selected' : ''; ?>>Ẩn</option>
+                    </select>
+                </div>
+                <?php if ($edit_mode && !empty($edit_data['filenames'])): ?>
                     <div class="form-group">
-                        <label for="title">Tiêu đề</label>
-                        <input type="text" name="title" id="title" class="form-control" value="<?php echo htmlspecialchars($edit_data['title']); ?>" required>
+                        <label>Ảnh hiện tại</label>
+                        <div class="image-preview">
+                            <?php foreach ($edit_data['filenames'] as $filename): ?>
+                                <div style="display: inline-block; position: relative;">
+                                    <img src="/2/admin/uploads/image/<?php echo htmlspecialchars($filename); ?>" alt="Image">
+                                    <button type="button" class="delete-btn" onclick="deleteImage('<?php echo htmlspecialchars($filename); ?>', this)">×</button>
+                                    <input type="hidden" name="delete_images[]" class="delete-image-input" value="">
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="description">Mô tả</label>
-                        <textarea name="description" id="description" class="form-control" rows="4"><?php echo htmlspecialchars($edit_data['description']); ?></textarea>
+                <?php endif; ?>
+                <div class="form-group">
+                    <label>Khu vực upload ảnh (JPG, PNG, GIF, tối đa 2MB)</label>
+                    <div class="dz-message">Kéo thả ảnh vào đây hoặc nhấn để chọn ảnh</div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-6 col-sm-12">
+                        <button type="button" id="submitBtn" class="btn btn-action">Lưu</button>
+                        <input type="hidden" name="save" value="1">
                     </div>
-                    <div class="form-group">
-                        <label for="status">Trạng thái</label>
-                        <select name="status" id="status" class="form-control">
-                            <option value="active" <?php echo $edit_data['status'] === 'active' ? 'selected' : ''; ?>>Hiển thị</option>
-                            <option value="inactive" <?php echo $edit_data['status'] === 'inactive' ? 'selected' : ''; ?>>Ẩn</option>
+                    <div class="col-md-6 col-sm-12 text-md-right">
+                        <a href="index.php?page=image" class="btn btn-reset">Hủy</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    <?php else: ?>
+        <!-- Trang danh sách ảnh -->
+        <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <h1 class="h3 mb-0 text-gray-800">Thư viện ảnh</h1>
+            <a href="index.php?page=image&action=add" class="btn btn-action"><i class="fas fa-plus"></i> Thêm ảnh</a>
+        </div>
+
+        <!-- Form tìm kiếm và bộ lọc -->
+        <div class="filter-form">
+            <form method="GET" action="">
+                <input type="hidden" name="page" value="image">
+                <div class="row">
+                    <div class="col-md-4 col-sm-12 form-group">
+                        <input type="text" name="search" class="form-control" placeholder="Tìm kiếm tiêu đề, mô tả..." value="<?php echo htmlspecialchars($search); ?>">
+                    </div>
+                    <div class="col-md-2 col-sm-6 form-group">
+                        <select name="role_id" class="form-control">
+                            <option value="0">Tất cả vai trò</option>
+                            <?php foreach ($roles as $role): ?>
+                                <option value="<?php echo $role['id']; ?>" <?php echo $role_id == $role['id'] ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($role['name']); ?>
+                                </option>
+                            <?php endforeach; ?>
                         </select>
                     </div>
-                    <?php if ($edit_mode && !empty($edit_data['filenames'])): ?>
-                        <div class="form-group">
-                            <label>Ảnh hiện tại</label>
-                            <div class="image-preview">
-                                <?php foreach ($edit_data['filenames'] as $filename): ?>
-                                    <div style="display: inline-block; position: relative;">
-                                        <img src="/2/admin/uploads/image/<?php echo htmlspecialchars($filename); ?>" alt="Image">
-                                        <button type="button" class="delete-btn" onclick="deleteImage('<?php echo htmlspecialchars($filename); ?>', this)">×</button>
-                                        <input type="hidden" name="delete_images[]" class="delete-image-input" value="">
-                                    </div>
-                                <?php endforeach; ?>
-                            </div>
-                        </div>
-                    <?php endif; ?>
-                    <div class="form-group">
-                        <label>Khu vực upload ảnh (JPG, PNG, GIF, tối đa 2MB)</label>
-                        <div class="dz-message">Kéo thả ảnh vào đây hoặc nhấn để chọn ảnh</div>
+                    <div class="col-md-2 col-sm-6 form-group">
+                        <select name="status" class="form-control">
+                            <option value="">Tất cả trạng thái</option>
+                            <option value="active" <?php echo $status === 'active' ? 'selected' : ''; ?>>Hiển thị</option>
+                            <option value="inactive" <?php echo $status === 'inactive' ? 'selected' : ''; ?>>Ẩn</option>
+                        </select>
                     </div>
-                    <div class="row mt-3">
-                        <div class="col-md-6 col-sm-12">
-                            <button type="button" id="submitBtn" class="btn btn-action">Lưu</button>
-                            <input type="hidden" name="save" value="1">
-                        </div>
-                        <div class="col-md-6 col-sm-12 text-md-right">
-                            <a href="index.php?page=image" class="btn btn-reset">Hủy</a>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        <?php else: ?>
-            <!-- Trang danh sách ảnh -->
-            <div class="d-sm-flex align-items-center justify-content-between mb-4">
-                <h1 class="h3 mb-0 text-gray-800">Thư viện ảnh</h1>
-                <a href="index.php?page=image&action=add" class="btn btn-action"><i class="fas fa-plus"></i> Thêm ảnh</a>
-            </div>
-
-            <!-- Form tìm kiếm và bộ lọc -->
-            <div class="filter-form">
-                <form method="GET" action="">
-                    <input type="hidden" name="page" value="image">
-                    <div class="row">
-                        <div class="col-md-4 col-sm-12 form-group">
-                            <input type="text" name="search" class="form-control" placeholder="Tìm kiếm tiêu đề, mô tả..." value="<?php echo htmlspecialchars($search); ?>">
-                        </div>
-                        <div class="col-md-2 col-sm-6 form-group">
-                            <select name="role_id" class="form-control">
-                                <option value="0">Tất cả vai trò</option>
-                                <?php foreach ($roles as $role): ?>
-                                    <option value="<?php echo $role['id']; ?>" <?php echo $role_id == $role['id'] ? 'selected' : ''; ?>>
-                                        <?php echo htmlspecialchars($role['name']); ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="col-md-2 col-sm-6 form-group">
-                            <select name="status" class="form-control">
-                                <option value="">Tất cả trạng thái</option>
-                                <option value="active" <?php echo $status === 'active' ? 'selected' : ''; ?>>Hiển thị</option>
-                                <option value="inactive" <?php echo $status === 'inactive' ? 'selected' : ''; ?>>Ẩn</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="row mt-3">
-                        <div class="col-md-6 col-sm-12">
-                            <button type="submit" class="btn btn-action"><i class="fas fa-search"></i> Tìm kiếm</button>
-                        </div>
-                        <div class="col-md-6 col-sm-12 text-md-right">
-                            <a href="index.php?page=image" class="btn btn-reset"><i class="fas fa-sync-alt"></i> Đặt lại</a>
-                        </div>
-                    </div>
-                </form>
-            </div>
-
-            <!-- Bảng danh sách ảnh -->
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Danh sách ảnh</h6>
                 </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
-                            <thead>
+                <div class="row mt-3">
+                    <div class="col-md-6 col-sm-12">
+                        <button type="submit" class="btn btn-action"><i class="fas fa-search"></i> Tìm kiếm</button>
+                    </div>
+                    <div class="col-md-6 col-sm-12 text-md-right">
+                        <a href="index.php?page=image" class="btn btn-reset"><i class="fas fa-sync-alt"></i> Đặt lại</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Bảng danh sách ảnh -->
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Danh sách ảnh</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                        <thead>
+                            <tr>
+                                <th>STT</th>
+                                <th>Ảnh</th>
+                                <th>Tiêu đề</th>
+                                <th>Mô tả</th>
+                                <th>Nhân viên</th>
+                                <th>Vai trò</th>
+                                <th>Trạng thái</th>
+                                <th>Thời gian</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (empty($images)): ?>
                                 <tr>
-                                    <th>STT</th>
-                                    <th>Ảnh</th>
-                                    <th>Tiêu đề</th>
-                                    <th>Mô tả</th>
-                                    <th>Nhân viên</th>
-                                    <th>Vai trò</th>
-                                    <th>Trạng thái</th>
-                                    <th>Thời gian</th>
-                                    <th>Hành động</th>
+                                    <td colspan="9" class="text-center">Không tìm thấy bản ghi nào.</td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                <?php if (empty($images)): ?>
+                            <?php else: ?>
+                                <?php foreach ($images as $index => $image): ?>
+                                    <?php $filenames = json_decode($image['filenames'], true) ?: []; ?>
                                     <tr>
-                                        <td colspan="9" class="text-center">Không tìm thấy bản ghi nào.</td>
+                                        <td><?php echo $offset + $index + 1; ?></td>
+                                        <td>
+                                            <?php if (!empty($filenames)): ?>
+                                                <img src="/2/admin/uploads/image/<?php echo htmlspecialchars($filenames[0]); ?>" class="thumbnail" alt="Thumbnail">
+                                            <?php else: ?>
+                                                Không có ảnh
+                                            <?php endif; ?>
+                                        </td>
+                                        <td><?php echo htmlspecialchars($image['title'] ?? 'N/A'); ?></td>
+                                        <td><?php echo htmlspecialchars($image['description'] ?? ''); ?></td>
+                                        <td><?php echo htmlspecialchars($image['name'] ?? 'N/A'); ?></td>
+                                        <td><?php echo htmlspecialchars($image['role_name'] ?? 'N/A'); ?></td>
+                                        <td>
+                                            <span class="badge <?php echo $image['status'] === 'active' ? 'badge-success' : 'badge-warning'; ?>">
+                                                <?php echo $image['status'] === 'active' ? 'Hiển thị' : 'Ẩn'; ?>
+                                            </span>
+                                        </td>
+                                        <td><?php echo date('d/m/Y H:i:s', strtotime($image['created_at'])); ?></td>
+                                        <td>
+                                            <a href="index.php?page=image&action=edit&id=<?php echo $image['id']; ?>" class="btn btn-sm btn-primary"><i class="fas fa-edit"></i></a>
+                                            <form action="" method="POST" style="display:inline;">
+                                                <input type="hidden" name="action" value="delete">
+                                                <input type="hidden" name="id" value="<?php echo $image['id']; ?>">
+                                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Bạn có chắc muốn xóa bản ghi này?');"><i class="fas fa-trash"></i></button>
+                                            </form>
+                                            <form action="" method="POST" style="display:inline;">
+                                                <input type="hidden" name="action" value="toggle">
+                                                <input type="hidden" name="id" value="<?php echo $image['id']; ?>">
+                                                <button type="submit" class="btn btn-sm btn-info"><i class="fas fa-eye<?php echo $image['status'] === 'active' ? '-slash' : ''; ?>"></i></button>
+                                            </form>
+                                        </td>
                                     </tr>
-                                <?php else: ?>
-                                    <?php foreach ($images as $index => $image): ?>
-                                        <?php $filenames = json_decode($image['filenames'], true) ?: []; ?>
-                                        <tr>
-                                            <td><?php echo $offset + $index + 1; ?></td>
-                                            <td>
-                                                <?php if (!empty($filenames)): ?>
-                                                    <img src="/2/admin/uploads/image/<?php echo htmlspecialchars($filenames[0]); ?>" class="thumbnail" alt="Thumbnail">
-                                                <?php else: ?>
-                                                    Không có ảnh
-                                                <?php endif; ?>
-                                            </td>
-                                            <td><?php echo htmlspecialchars($image['title'] ?? 'N/A'); ?></td>
-                                            <td><?php echo htmlspecialchars($image['description'] ?? ''); ?></td>
-                                            <td><?php echo htmlspecialchars($image['name'] ?? 'N/A'); ?></td>
-                                            <td><?php echo htmlspecialchars($image['role_name'] ?? 'N/A'); ?></td>
-                                            <td>
-                                                <span class="badge <?php echo $image['status'] === 'active' ? 'badge-success' : 'badge-warning'; ?>">
-                                                    <?php echo $image['status'] === 'active' ? 'Hiển thị' : 'Ẩn'; ?>
-                                                </span>
-                                            </td>
-                                            <td><?php echo date('d/m/Y H:i:s', strtotime($image['created_at'])); ?></td>
-                                            <td>
-                                                <a href="index.php?page=image&action=edit&id=<?php echo $image['id']; ?>" class="btn btn-sm btn-primary"><i class="fas fa-edit"></i></a>
-                                                <form action="" method="POST" style="display:inline;">
-                                                    <input type="hidden" name="action" value="delete">
-                                                    <input type="hidden" name="id" value="<?php echo $image['id']; ?>">
-                                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Bạn có chắc muốn xóa bản ghi này?');"><i class="fas fa-trash"></i></button>
-                                                </form>
-                                                <form action="" method="POST" style="display:inline;">
-                                                    <input type="hidden" name="action" value="toggle">
-                                                    <input type="hidden" name="id" value="<?php echo $image['id']; ?>">
-                                                    <button type="submit" class="btn btn-sm btn-info"><i class="fas fa-eye<?php echo $image['status'] === 'active' ? '-slash' : ''; ?>"></i></button>
-                                                </form>
-                                            </td>
-                                        </tr>
-                                    <?php endforeach; ?>
-                                <?php endif; ?>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Phân trang -->
-                    <?php if ($total_pages > 1): ?>
-                        <nav aria-label="Page navigation">
-                            <ul class="pagination">
-                                <li class="page-item <?php echo $page <= 1 ? 'disabled' : ''; ?>">
-                                    <a class="page-link" href="?page=image&p=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>&role_id=<?php echo $role_id; ?>&status=<?php echo urlencode($status); ?>" aria-label="Previous">
-                                        <span aria-hidden="true">«</span>
-                                    </a>
-                                </li>
-                                <?php for ($i = 1; $i <= $total_pages; $i++): ?>
-                                    <li class="page-item <?php echo $i == $page ? 'active' : ''; ?>">
-                                        <a class="page-link" href="?page=image&p=<?php echo $i; ?>&search=<?php echo urlencode($search); ?>&role_id=<?php echo $role_id; ?>&status=<?php echo urlencode($status); ?>"><?php echo $i; ?></a>
-                                    </li>
-                                <?php endfor; ?>
-                                <li class="page-item <?php echo $page >= $total_pages ? 'disabled' : ''; ?>">
-                                    <a class="page-link" href="?page=image&p=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>&role_id=<?php echo $role_id; ?>&status=<?php echo urlencode($status); ?>" aria-label="Next">
-                                        <span aria-hidden="true">»</span>
-                                    </a>
-                                </li>
-                            </ul>
-                        </nav>
-                    <?php endif; ?>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
                 </div>
-            </div>
-        <?php endif; ?>
 
-    <!-- <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> -->
+                <!-- Phân trang -->
+                <?php if ($total_pages > 1): ?>
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination">
+                            <li class="page-item <?php echo $page <= 1 ? 'disabled' : ''; ?>">
+                                <a class="page-link" href="?page=image&p=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>&role_id=<?php echo $role_id; ?>&status=<?php echo urlencode($status); ?>" aria-label="Previous">
+                                    <span aria-hidden="true">«</span>
+                                </a>
+                            </li>
+                            <?php for ($i = 1; $i <= $total_pages; $i++): ?>
+                                <li class="page-item <?php echo $i == $page ? 'active' : ''; ?>">
+                                    <a class="page-link" href="?page=image&p=<?php echo $i; ?>&search=<?php echo urlencode($search); ?>&role_id=<?php echo $role_id; ?>&status=<?php echo urlencode($status); ?>"><?php echo $i; ?></a>
+                                </li>
+                            <?php endfor; ?>
+                            <li class="page-item <?php echo $page >= $total_pages ? 'disabled' : ''; ?>">
+                                <a class="page-link" href="?page=image&p=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>&role_id=<?php echo $role_id; ?>&status=<?php echo urlencode($status); ?>" aria-label="Next">
+                                    <span aria-hidden="true">»</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                <?php endif; ?>
+            </div>
+        </div>
+    <?php endif; ?>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/dropzone.min.js"></script>
     <script>
@@ -732,7 +744,7 @@ $roles = $role_stmt->fetchAll(PDO::FETCH_ASSOC);
                         }
                     });
                     // Chuyển hướng sau khi upload xong
-                    this.on("queuecomplete", function() {
+                    $this.on("queuecomplete", function() {
                         var formData = new FormData(document.querySelector('#imageUpload'));
                         formData.append('save', '1');
                         $.ajax({

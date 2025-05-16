@@ -1,14 +1,34 @@
 <?php
+session_start();
+
+// Kết nối cơ sở dữ liệu
 try {
     require_once 'C:/laragon/www/2/admin/config/db_connect.php';
-    // Lấy logo
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (Exception $e) {
+    error_log('Header database error: ' . $e->getMessage());
+    $logo = ['image' => 'default-logo.png', 'link' => '/2/public'];
+    $menu = [];
+    $cart_count = 0;
+    $user = null;
+}
+
+// Lấy logo
+try {
     $stmt = $pdo->prepare("SELECT image, link FROM logos WHERE status = 1 ORDER BY created_at DESC LIMIT 1");
     $stmt->execute();
     $logo = $stmt->fetch(PDO::FETCH_ASSOC) ?: ['image' => 'default-logo.png', 'link' => '/2/public'];
-    
-    // Lấy danh mục
-    $stmt = $pdo->query("SELECT id, name, parent_id, link FROM categories WHERE status = 1 ORDER BY `order`, id");
+} catch (Exception $e) {
+    error_log('Logo fetch error: ' . $e->getMessage());
+    $logo = ['image' => 'default-logo.png', 'link' => '/2/public'];
+}
+
+// Lấy danh mục Menu Main
+try {
+    $stmt = $pdo->prepare("SELECT id, name, parent_id, slug, link FROM categories WHERE status = 1 AND is_main_menu = 1 ORDER BY `order`, name");
+    $stmt->execute();
     $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
     // Xây dựng danh mục cha-con
     $menu = [];
     foreach ($categories as $cat) {
@@ -16,38 +36,39 @@ try {
             $menu[$cat['id']] = [
                 'id' => $cat['id'],
                 'name' => $cat['name'],
-                'link' => $cat['link'] ?: '/2/public/' . $cat['id'],
+                'link' => $cat['link'] ?: '/2/public/' . $cat['slug'],
                 'children' => []
             ];
         } else {
             if (isset($menu[$cat['parent_id']])) {
                 $menu[$cat['parent_id']]['children'][] = [
                     'name' => $cat['name'],
-                    'link' => $cat['link'] ?: '/2/public/' . $cat['id']
+                    'link' => $cat['link'] ?: '/2/public/' . $cat['slug']
                 ];
             }
         }
     }
-    
-    // Đếm giỏ hàng
-    $cart_count = 0;
-    if (isset($_SESSION['cart'])) {
-        $cart_count = array_sum(array_column($_SESSION['cart'], 'quantity'));
-    }
-    
-    // Kiểm tra đăng nhập
-    $user = null;
-    if (isset($_SESSION['user_id'])) {
+} catch (Exception $e) {
+    error_log('Main menu fetch error: ' . $e->getMessage());
+    $menu = [];
+}
+
+// Đếm giỏ hàng
+$cart_count = 0;
+if (isset($_SESSION['cart'])) {
+    $cart_count = array_sum(array_column($_SESSION['cart'], 'quantity'));
+}
+
+// Kiểm tra đăng nhập
+$user = null;
+if (isset($_SESSION['user_id'])) {
+    try {
         $stmt = $pdo->prepare("SELECT username, avatar FROM users WHERE id = ?");
         $stmt->execute([$_SESSION['user_id']]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
+    } catch (Exception $e) {
+        error_log('User fetch error: ' . $e->getMessage());
     }
-} catch (Exception $e) {
-    error_log('Header error: ' . $e->getMessage());
-    $logo = ['image' => 'default-logo.png', 'link' => '/2/public'];
-    $menu = [];
-    $cart_count = 0;
-    $user = null;
 }
 ?>
 
@@ -56,9 +77,7 @@ try {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
         .header {
@@ -90,7 +109,7 @@ try {
             border-radius: 5px;
         }
         .header .dropdown-menu {
-            background:rgb(255, 255, 255);
+            background: rgb(255, 255, 255);
             border: 1px solid #eee;
             border-radius: 5px;
         }
@@ -105,14 +124,13 @@ try {
             align-items: center;
             gap: 25px;
         }
-        /* Tìm kiếm */
         .header-right .search-icon a {
             color: #000;
             font-size: 1.3em;
             text-decoration: none;
         }
         .header-right .search-icon .dropdown-menu {
-            background: #000;
+            background: #fff;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
             padding: 0.5rem;
         }
@@ -131,14 +149,13 @@ try {
             background: #3498db;
             border: none;
             padding: 0.5rem;
-            color: #000;
+            color: #fff;
             cursor: pointer;
             transition: background 0.3s;
         }
         .header-right .search-icon .search-form button:hover {
             background: #2980b9;
         }
-        /* Giỏ hàng */
         .header-right .cart-icon {
             position: relative;
             transition: transform 0.3s;
@@ -167,7 +184,6 @@ try {
         .header-right .cart-icon:hover .badge {
             transform: scale(1.1);
         }
-        /* Login */
         .header-right .login-icon img {
             width: 30px;
             height: 30px;
@@ -229,16 +245,16 @@ try {
         <nav class="navbar navbar-expand-lg">
             <div class="container-fluid">
                 <a class="navbar-brand" href="<?php echo htmlspecialchars($logo['link'] ?: '/2/public', ENT_QUOTES); ?>">
-                    <img src="http://localhost/2/admin/<?php echo htmlspecialchars($logo['image'], ENT_QUOTES); ?>" alt="Logo">
+                    <img src="/2/admin/<?php echo htmlspecialchars($logo['image'], ENT_QUOTES); ?>" alt="Logo">
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"><i class="fas fa-bars text-white"></i></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav me-auto">
-                        <!-- <li class="nav-item">
+                        <li class="nav-item">
                             <a class="nav-link" href="/2/public">Trang chủ</a>
-                        </li> -->
+                        </li>
                         <?php foreach ($menu as $cat): ?>
                             <?php if (!empty($cat['children'])): ?>
                                 <li class="nav-item dropdown">
@@ -270,7 +286,7 @@ try {
                                 <i class="fas fa-search"></i>
                             </a>
                             <div class="dropdown-menu dropdown-menu-end p-2" aria-labelledby="searchDropdown">
-                                <form class="search-form" action="/2/search" method="GET">
+                                <form class="search-form" action="/2/public/search" method="GET">
                                     <input type="text" name="q" placeholder="Tìm kiếm..." required>
                                     <button type="submit"><i class="fas fa-search"></i></button>
                                 </form>
@@ -286,7 +302,7 @@ try {
                         </div>
                         <div class="login-icon">
                             <?php if ($user): ?>
-                                <a href="/2/profile">
+                                <a href="/2/public/profile">
                                     <?php if ($user['avatar']): ?>
                                         <img src="/2/admin/uploads/avatars/<?php echo htmlspecialchars($user['avatar'], ENT_QUOTES); ?>" alt="Avatar">
                                     <?php else: ?>
@@ -302,7 +318,6 @@ try {
             </div>
         </nav>
     </header>
-    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 </body>
 </html>
